@@ -2,7 +2,7 @@
 
 ### IoC 컨테이너와 Bean
 
-![IoC컨테이너](./images/IoC컨테이너.jpg)
+![IoC컨테이너](./images/IoC컨테이너1.jpg)
 
 Spring에서 사용되는 `IoC`란 객체가 내부적으로 조작할 객체를 직접 생성하지 않고 외부로부터 주입받는 기법을 의미한다. 이때 객체를 외부로부터 주입해주는 작업을 DI(의존성 주입)이라고 부른다.
 
@@ -12,7 +12,7 @@ Spring에서 사용되는 `IoC`란 객체가 내부적으로 조작할 객체를
 
 ### 설정 메타정보
 
-![설정메타정보](./images/설정메타정보.PNG)
+![설정메타정보](./images/설정메타정보1.png)
 
 IoC 컨테이너가 관리하는 Bean으로 등록하기 위해서는 적절한 메타정보를 만들어 제공해야 한다. 스프링의 설정메타 정보는 `BeanDefinition` 이라는 인터페이스이다. Xml, 애노테이션, 자바 코드, 프로퍼티 파일 전부 상관없이 `BeanDefinitionReader` 라는 인터페이스에 의해 `BeanDefinition` 객체로 변환된다. Spring IoC는 이러한 설정 메타정보를 통해 오브젝트를 생성하고 DI 작업을 수행한다.
 
@@ -34,7 +34,7 @@ StaticApplicationContext는 코드를 통해 빈 메타정보를 등록하기 �
 
 스프링 애플리케이션에서 가장 많이 사용된다. Xml 설정 파일을 사용하는 경우에는 `XmlWebApplicationContext`를 사용하며, 애노테이션을 사용한다면 `AnnotationConfigWebApplicationContext`를 사용한다.
 
-![웹환경애플리케이션](./images/웹환경애플리케이션.PNG)
+![웹환경애플리케이션](./images/웹환경애플리케이션_1.png)
 
 웹 환경에서의 스프링은 클라이언트의 요청을 전부 받는 `FrontController`, `DispatcherServlet`을 제공한다. `DispatcherServlet`는 자체적으로 ApplicationContext를 생성하고, Root Application Context를 부모로 등록한다.
 
@@ -48,7 +48,7 @@ IoC 컨테이너는 계층구조로 구현할 수 있다. 각자 독립적으로
 
 ### 일반적인 웹 어플리케이션의 IoC 컨테이너 구성
 
-![웹환경애플리케이션2](./images/웹환경애플리케이션2.PNG)
+![웹환경애플리케이션2](./images/웹환경애플리케이션_2.png)
 
 DispatcherServlet은 자체적으로 ApplicationContext를 생성하고 사용한다. 이를 `ServletContext` 라고도 부른다. 이외에도 RootApplicationContext가 하나 존재하는데, 이는 스프링 외의 기술을 사용하는 Ajax Engine, JSP 등에서 Spring IoC의 기능을 사용할 수 있도록 하기 위함이다. 스프링 밖의 어디서라도 `WebApplicationContextUtils.getWebApplicationContext(ServletContext sc)` 를 호출하면 루트 어플리케이션 컨텍스트를 가져올 수 있다.
 
@@ -56,7 +56,7 @@ DispatcherServlet은 자체적으로 ApplicationContext를 생성하고 사용�
 
 ## 빈 설정 / DI
 
-![설정메타정보](./images/설정메타정보.PNG)
+![설정메타정보](./images/설정메타정보1.png)
 
 메타정보 중 반드시 들어가야 하는 것은 `클래스 이름`과 `빈의 이름` 이다. `빈의 이름`은 명시하지 않는 경우 클래스 이름에서 첫글자를 소문자로 바꿔 사용하게 된다. 메타정보를 작성하는 방법은 크게 XML, @Configuration, @Component 등록 세 가지로 나뉜다.
 
@@ -161,7 +161,7 @@ Map<String, Printer> printerMap;
 
 ### 동작 원리
 
-![빈팩토리-생명주기](./images/빈팩토리-생명주기.PNG)
+![빈팩토리-생명주기](./images/빈팩토리-생명주기1.png)
 
 `AutowiredAnnotationBeanPostProcessor`는 `BeanPostProcessor`를 확장한 클래스다. 이 클래스 또한 빈으로 등록되어 있으며, 11번 Life Cycle에서 Bean들에게 있는 @Autowired을 처리하여 DI 로직을 처리해준다.
 
@@ -199,7 +199,7 @@ public void serviceRequestFormSubmit(HttpServletRequest request){
 
 #### 2. 스코프 프록시(프록시 패턴) 이용하기
 
-![스코프](./images/스코프.PNG)
+![스코프](./images/스코프1.png)
 
 클라이언트는 `스코프 프록시(Scoped Proxy)` 오브젝트를 실제 스코프 빈처럼 사용하면 프록시에서 현재 스코프에 맞는 실제 빈 오브젝트로 작업을 위임해준다. LoginService의 입장에서는 모두 같은 오브젝트(LoginUser)를 사용하는 것처럼 보이지만, 실제로는 그 뒤에 사용자별로 만들어진 여러 개의 LoginUser가 존재하고, 스코프 프록시는 실제 LoginUser 오브젝트로 클라이언트의 호출을 위임해주는 역할을 해줄 뿐이다. 물론 **스코프 프록시는 실제 스코프 오브젝트인 LoginUser를 상속** 하고 있어서 LoginService에서는 평범한 LoginUser 타입의 오브젝트로 사용할 수 있다.
 
