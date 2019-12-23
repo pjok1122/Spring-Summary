@@ -113,3 +113,5 @@ ApplicationContext의 타입에 상관없이 **리소스 타입을 강제하려�
 <hr>
 
 ### ApplicationEventPublisher
+
+생략..

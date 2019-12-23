@@ -16,3 +16,12 @@
 - MessageSource (다국화 기능)
 - ResourceLoader (리소스 추상화)
 - ApplicationEventPublisher (이벤트 프로그래밍)
+
+## [3장. Validation &amp; DataBinding 추상화](./Abstract/README.md)
+
+- Validator (객체 유효성 검사)
+- DataBinding
+  - PropertyEditor (오래된 버전)
+  - Converter
+  - Formatter
+  - ConversionService
