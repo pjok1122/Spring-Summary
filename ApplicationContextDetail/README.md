@@ -114,4 +114,63 @@ ApplicationContext의 타입에 상관없이 **리소스 타입을 강제하려�
 
 ### ApplicationEventPublisher
 
-생략..
+ApplicationContext가 제공하는 또 다른 기능 중 하나로, 이벤트 프로그래밍에 필요한 인터페이스를 제공한다. (옵저버 패턴 구현체)
+
+#### 이벤트 만들기
+
+- ApplicationEvent 상속
+- 스프링 4.2부터는 이 클래스를 상속받지 않아도 된다.
+
+```java
+public class Event {
+	private int data;
+	private String alias;
+
+	public Event(int data, String alias) {
+		this.data = data;
+		this.alias = alias;
+	}
+```
+
+#### 이벤트 발생시키기
+
+- ApplicationEventPublisher.publishEvent(ApplicationEvent event)
+
+```java
+@Autowired
+ApplicationEventPublisher applicationEventPublisher;
+
+@Override
+public void run(ApplicationArguments args) throws Exception {
+    applicationEventPublisher.publishEvent(new Event(10, "홍길동"));
+}
+```
+
+#### 이벤트 처리하기
+
+- `ApplicationListener<이벤트>`를 구현한 클래스를 만들어 빈으로 등록한다.
+- 스프링 4.2부터는 `@EventListener`를 사용해서 빈의 메서드에 사용할 수 있다.
+- 기본적으로는 synchronized로 구현되어있지만, @Async를 사용할 수 있다.
+- 순서를 정해주고 싶은 경우에는 @Order와 함께 사용한다.
+
+```java
+@Component
+public class EventHandler {
+
+	@EventListener
+	public void handle(Event event) {
+		System.out.println(Thread.currentThread().toString());
+		System.out.println("event Handler1 : " + event.toString());
+	}
+}
+```
+
+#### 스프링이 제공하는 이벤트
+
+- ContextRefreshedEvent : ApplicationContext가 초기화됐거나 리프레시 했을 때 발생.
+- ContextStaredEvent : ApplicationContext를 start()하여 라이프사이클 빈들이 시작 신호를 받은 시점에 발생
+- ContextStoppedEvent : ApplicationContext를 stop()하여 라이플사이클 빈들이 정지 신호를 받은 시점에 발생
+- ContextClosedEvent : ApplicationContext를 close()하여 싱글톤 빈들이 소멸되는 시점에 발생.
+- RequestHandledEvent : HTTP 요청을 처리했을 때 발생
+
+스프링부트는 더 다양한 이벤트를 제공해주고 있다.
