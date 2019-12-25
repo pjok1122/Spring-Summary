@@ -127,8 +127,8 @@ public class Event {
 	private String alias;
 
 	public Event(int data, String alias) {
-		this.data = data;
-		this.alias = alias;
+        this.data = data;
+        this.alias = alias;
 	}
 ```
 

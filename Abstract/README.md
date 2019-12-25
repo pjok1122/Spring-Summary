@@ -1,29 +1,29 @@
-## Validation & Databinding 추상화
+# Validation & Databinding 추상화
 
 - [Validation &amp; Databinding 추상화](#validation-amp-databinding-%ec%b6%94%ec%83%81%ed%99%94)
-  - [Validator](#validator)
-    - [인터페이스](#%ec%9d%b8%ed%84%b0%ed%8e%98%ec%9d%b4%ec%8a%a4)
-    - [스프링 부트 2.0.5 이상 버전](#%ec%8a%a4%ed%94%84%eb%a7%81-%eb%b6%80%ed%8a%b8-205-%ec%9d%b4%ec%83%81-%eb%b2%84%ec%a0%84)
-  - [DataBinding](#databinding)
-    - [PropertyEditor](#propertyeditor)
-    - [Converter](#converter)
-    - [Formatter](#formatter)
-      - [Registry 등록](#registry-%eb%93%b1%eb%a1%9d)
-    - [ConversionService](#conversionservice)
+	- [Validator](#validator)
+		- [인터페이스](#%ec%9d%b8%ed%84%b0%ed%8e%98%ec%9d%b4%ec%8a%a4)
+		- [스프링 부트 2.0.5 이상 버전](#%ec%8a%a4%ed%94%84%eb%a7%81-%eb%b6%80%ed%8a%b8-205-%ec%9d%b4%ec%83%81-%eb%b2%84%ec%a0%84)
+	- [DataBinding](#databinding)
+		- [PropertyEditor](#propertyeditor)
+		- [Converter](#converter)
+		- [Formatter](#formatter)
+			- [Registry 등록](#registry-%eb%93%b1%eb%a1%9d)
+		- [ConversionService](#conversionservice)
 
-### Validator
+## Validator
 
 [org.springwork.validation.Validator](https://docs.spring.io/spring/docs/current/javadoc-api/org/springframework/validation/Validator.html)
 
 애플리케이션에서 사용하는 객체 검증용 인터페이스다. 스프링 MVC에서 주로 사용되지만, 사실 어떠한 계층과도 상관없이 사용할 수 있다. 웹 서비스, 데이터 등 어느 계층에서나 사용 가능하다. Validator의 구현체로는 `LocalValidatorFactoryBean`이 있다.
 
-#### 인터페이스
+### 인터페이스
 
 - boolean supports(Class clazz) : 어떤 타입의 객체를 검증할 때 사용할 것인지를 결정한다.
 - void validate(Object obj, Errors e) : 실제 검증 로직을 이 안에서 구현하며, 에러 발생 시 e에 에러를 주입한다.
   - 구현할 때 ValidationUtils를 사용하면 편리하나, 오래된 방법.
 
-#### 스프링 부트 2.0.5 이상 버전
+### 스프링 부트 2.0.5 이상 버전
 
 - LocalValidatorFactoryBean이 빈으로 자동 등록되어있다.
 - @Email, @NotNull, @Min, @Max, @Size 등으로 편하게 검증이 가능하다.
@@ -51,14 +51,14 @@ public void run(ApplicationArguments args) throws Exception {
 
 <hr>
 
-### DataBinding
+## DataBinding
 
 [org.springframework.validation.DataBinder](https://docs.spring.io/spring/docs/current/javadoc-api/org/springframework/validation/DataBinder.html)
 
 - 기술적인 관점 : 프로퍼티 값을 타겟 객체에 설정하는 기능
 - 사용자 관점 : 사용자 입력값을 애플리케이션 도메인 모델에 동적으로 변환해 넣어주는 기능. 즉, 입력값은 항상 "문자열"인데, 그 값을 객체가 가지고 있는 타입(int, long, boolean, Data, `Event`, `Book`)으로 변환해 넣어주는 기능을 제공한다.
 
-#### PropertyEditor
+### PropertyEditor
 
 - 스프링 3.0 이전까지 DataBinder가 변환 작업에 사용하던 인터페이스 (오래된 버전)
 - Thread-safe 하지 않기 때문에 **절대 싱글톤으로 생성해서는 안된다.** (상태 정보가 저장되어있음.)
@@ -94,7 +94,7 @@ PropertyEditor는 인터페이스로 구현해야 할 메서드가 많이 있다
 
 **오래된 방법이므로 사용하지 않음. 원리만 기억하자.**
 
-#### Converter
+### Converter
 
 - `Source` Type을 `Target` Type으로 변환할 수 있는 일반적인 변환기.
 - `PropertyEditor`와 다르게 상태정보를 저장하지 않으므로 `Thread-safe` 하다. (빈으로 등록이 가능하다.)
@@ -119,7 +119,7 @@ public class EventConverter {
 }
 ```
 
-#### Formatter
+### Formatter
 
 - PropertyEditor의 대체제라고 볼 수 있다.
 - Converter를 상속받아 구현되었다.
@@ -147,7 +147,7 @@ public class EventFormatter implements Formatter<Event> {
 
 스프링부트에서는 Formatter와 Converter 빈을 찾아 자동으로 registry에 등록해준다. 만약 스프링부트가 아니라면 다음처럼 직접 Config 파일을 만들어 등록할 수 있다.
 
-##### Registry 등록
+#### Registry 등록
 
 ```java
 @Configuration
@@ -167,7 +167,7 @@ public class WebConfig implements WebMvcConfigurer {
 }
 ```
 
-#### ConversionService
+### ConversionService
 
 ![ConversionService](../images/ConversionService.png)
 
