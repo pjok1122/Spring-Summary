@@ -1,17 +1,17 @@
 - [스프링 AOP](#%ec%8a%a4%ed%94%84%eb%a7%81-aop)
-  - [AOP의 주요 개념](#aop%ec%9d%98-%ec%a3%bc%ec%9a%94-%ea%b0%9c%eb%85%90)
-  - [AOP의 구현체](#aop%ec%9d%98-%ea%b5%ac%ed%98%84%ec%b2%b4)
-  - [AOP 적용 방법](#aop-%ec%a0%81%ec%9a%a9-%eb%b0%a9%eb%b2%95)
-    - [컴파일 (AspectJ)](#%ec%bb%b4%ed%8c%8c%ec%9d%bc-aspectj)
-    - [로드타임 (AspectJ)](#%eb%a1%9c%eb%93%9c%ed%83%80%ec%9e%84-aspectj)
-    - [런타임 (Spring AOP)](#%eb%9f%b0%ed%83%80%ec%9e%84-spring-aop)
-  - [스프링 AOP의 특징](#%ec%8a%a4%ed%94%84%eb%a7%81-aop%ec%9d%98-%ed%8a%b9%ec%a7%95)
-    - [프록시패턴 AOP](#%ed%94%84%eb%a1%9d%ec%8b%9c%ed%8c%a8%ed%84%b4-aop)
-    - [스프링 AOP 사용하기](#%ec%8a%a4%ed%94%84%eb%a7%81-aop-%ec%82%ac%ec%9a%a9%ed%95%98%ea%b8%b0)
-      - [1. 의존성 추가](#1-%ec%9d%98%ec%a1%b4%ec%84%b1-%ec%b6%94%ea%b0%80)
-      - [2. Aspect 클래스 만들기](#2-aspect-%ed%81%b4%eb%9e%98%ec%8a%a4-%eb%a7%8c%eb%93%a4%ea%b8%b0)
-      - [3. 포인트컷 표현식](#3-%ed%8f%ac%ec%9d%b8%ed%8a%b8%ec%bb%b7-%ed%91%9c%ed%98%84%ec%8b%9d)
-      - [4. 어드바이스 정의](#4-%ec%96%b4%eb%93%9c%eb%b0%94%ec%9d%b4%ec%8a%a4-%ec%a0%95%ec%9d%98)
+	- [AOP의 주요 개념](#aop%ec%9d%98-%ec%a3%bc%ec%9a%94-%ea%b0%9c%eb%85%90)
+	- [AOP의 구현체](#aop%ec%9d%98-%ea%b5%ac%ed%98%84%ec%b2%b4)
+	- [AOP 적용 방법](#aop-%ec%a0%81%ec%9a%a9-%eb%b0%a9%eb%b2%95)
+		- [컴파일 (AspectJ)](#%ec%bb%b4%ed%8c%8c%ec%9d%bc-aspectj)
+		- [로드타임 (AspectJ)](#%eb%a1%9c%eb%93%9c%ed%83%80%ec%9e%84-aspectj)
+		- [런타임 (Spring AOP)](#%eb%9f%b0%ed%83%80%ec%9e%84-spring-aop)
+	- [스프링 AOP의 특징](#%ec%8a%a4%ed%94%84%eb%a7%81-aop%ec%9d%98-%ed%8a%b9%ec%a7%95)
+		- [프록시패턴 AOP](#%ed%94%84%eb%a1%9d%ec%8b%9c%ed%8c%a8%ed%84%b4-aop)
+		- [스프링 AOP 사용하기](#%ec%8a%a4%ed%94%84%eb%a7%81-aop-%ec%82%ac%ec%9a%a9%ed%95%98%ea%b8%b0)
+			- [1. 의존성 추가](#1-%ec%9d%98%ec%a1%b4%ec%84%b1-%ec%b6%94%ea%b0%80)
+			- [2. Aspect 클래스 만들기](#2-aspect-%ed%81%b4%eb%9e%98%ec%8a%a4-%eb%a7%8c%eb%93%a4%ea%b8%b0)
+			- [3. 포인트컷 표현식](#3-%ed%8f%ac%ec%9d%b8%ed%8a%b8%ec%bb%b7-%ed%91%9c%ed%98%84%ec%8b%9d)
+			- [4. 어드바이스 정의](#4-%ec%96%b4%eb%93%9c%eb%b0%94%ec%9d%b4%ec%8a%a4-%ec%a0%95%ec%9d%98)
 
 # 스프링 AOP
 
@@ -129,9 +129,9 @@ dependency{
 Aspect 클래스는 Bean으로 등록되어있어야하며, @Aspect 애노테이션을 붙여 이 클래스가 Aspect임을 컨텍스트 애플리케이션에게 알려야 한다. 스프링IoC는 이 애노테이션이 붙은 클래스를 기존 빈을 대체하는 동적 프록시 빈으로 만들어 등록시켜준다.
 
 ```java
-@Component
-@Aspect
-public class PerfAspect {
+	@Component
+	@Aspect
+	public class PerfAspect {
 ```
 
 <br>
