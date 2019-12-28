@@ -36,3 +36,12 @@
 - 스프링 AOP의 특징
   - 프록시패턴 AOP
   - 스프링 AOP 사용하기
+
+## [5장. 스프링부트의 원리](./SpringBootPrinciple/README.md)
+
+- 의존성 관리
+- @EnableAutoConfiguration
+- 내장 웹 서버 설정
+  - Tomcat, Jetty, Undertow
+  - HTTPS, HTTP2 설정
+- 독립적으로 실행 가능한 JAR 파일
