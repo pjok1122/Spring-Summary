@@ -249,4 +249,131 @@ test 프로파일의 빈 또한 사용 가능하다.
 
 ## 테스트
 
+### 의존성 추가
+
+대부분 IDE에서 의존성을 추가해주지만, 추가되지 않는다면 spring-boot-starter-test를 test scope으로 추가해줘야 한다.
+
+```xml
+<dependency>
+	<groupId>org.springframework.boot</groupId>
+	<artifactId>spring-boot-starter-test</artifactId>
+	<scope>test</scope>
+</dependency>
+```
+
+### @SpringBootTest
+
+- `@SpringBootTest`는 `@SpringBootApplication` 애노테이션을 찾아, 애플리케이션에 필요한 모든 빈을 등록해준다. 즉, 애플리케이션에 있는 모든 빈을 `@Autowired`로 주입받아 사용이 가능하다.
+
+- @SpringBootTest는 `@RunWith(SpringRunner.class)`와 함께 사용해야 한다.
+
+- SpringBootTest의 webEnvironment는 default로 MOCK으로 설정되어있다. 이 값은 다음과 같이 변경이 가능하다. - MOCK : mock servlet environment으로 내장 톰캣을 구동하지 않는다. - RANDOM_PORT, DEFINED_PORT : 내장 톰캣을 사용한다. - NONE : 서블릿 환경을 제공하지 않는다.
+
+### 테스트 코드
+
+#### MockMvc
+
+```java
+
+@RunWith(SpringRunner.class)
+@SpringBootTest(webEnvironment= SpringBootTest.WebEnvironment.MOCK)
+@AutoConfigureMockMvc
+public class SampleControllerTest{
+
+	@Autowired
+	MockMvc mockMvc;
+
+	@Test
+	public void hello() throws Exception{
+		mockMvc.perform(get("/hello"))
+		.andExcept(status().isOk())
+		.andExcept(content().string("Hello youngjae"))
+		.andDo(print());
+	}
+}
+```
+
+`@AutoConfigureMockMvc`를 사용해야 MockMvc를 주입받아 사용할 수 있다. 만약 webEnvironment가 MOCK이 아니라 실제 내장 톰캣을 사용한다면, 테스트 방식도 달라진다.
+
+#### TestRestTemplate
+
+```java
+@RunWith(SpringRunner.class)
+@SpringBootTest(webEnvironment= SpringBootTest.WebEnvironment.RANDOM_PORT)
+public class SampleControllerTest{
+
+	@Autowired
+	TestRestTemplate testRestTemplate;
+
+	@MockBean
+	SampleService mockSampleService;
+
+	@Test
+	public void hello() throws Exception{
+		when(mockSampleService.getName()).thenReturn("yj");
+
+		String result = testRestTemplate.getForObject("/hello", String.class);
+		assertThat(result).isEqualTo("hello yj");
+	}
+}
+```
+
+- SampleService를 빈으로 등록된 객체 말고 다른 객체로 만들어 사용하고 싶다면 @MockBean 애노테이션을 붙여 사용한다. 대신 `when`을 이용하여 Mocking을 먼저 해두고, 테스트 코드를 작성해주는 것이 좋다.
+- 내장 톰캣을 실제 구동시키기 때문에 `TestRestTemplate`을 사용하여 request를 "진짜로" 전달한다.
+- TestRestTemplate은 요청이 Synchronous 하다.
+
+#### WebTestClient
+
+Async하게 테스트할 수 있으며, api가 직관적이므로 사용하기가 쉽다. dependency에 `spring-boot-starter-webflux`를 추가해주어야 사용할 수 있다.
+
+```java
+@RunWith(SpringRunner.class)
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+public class SampleControllerTest {
+    @Autowired
+    WebTestClient webTestClient;
+
+    @MockBean
+    SampleService mockSampleService;
+
+    @Test
+    public void hello() throws Exception {
+    	when(mockSampleService.getName()).thenReturn("yj");
+
+    	webTestClient.get().uri("/hello").exchange()
+    	.expectStatus().isOk()
+    	.expectBody(String.class).isEqualTo("helloyj");
+    }
+
+}
+```
+
+### 슬라이스 테스트
+
+모든 빈을 등록해서 사용하는 것이 아니라, 레이어 별로 잘라서 테스트를 하고 싶을 때 사용한다. `@JsonTest`, `@WebMvcTest`, `@WebFluxTest`, `@DataJpaTest` 등 다양한 애노테이션이 있다.
+
+예시로 WebMvcTest 하나만 보도록 한다. WebMvcTest는 `@AutoConfigureMockMvc`를 가지고 있기 때문에 따로 설정할 필요가 없다. 기본적으로 WebMvcTest는 Web과 관련된 빈들만 자동등록해주기 때문에 `SampleService`는 빈으로 등록되지 않는다. 따라서 @MockBean을 사용해 빈으로 주입해 사용할 수도 있다.
+
+```java
+@RunWith(SpringRunner.class)
+@WebMvcTest(SampleController.class)
+public class SampleControllerTest {
+    @Autowired
+    MockMvc mockMvc;
+
+    @MockBean
+    SampleService mockSampleService;
+
+    @Test
+    public void hello() throws Exception {
+    	when(mockSampleService.getName()).thenReturn("yj");
+
+		mockMvc.perform(get("/hello"))
+		.andExcept(status().isOk())
+		.andExcept(content().string("Hello yj"))
+		.andDo(print());
+    }
+}
+```
+
 ## Spring-Dev-Tools
