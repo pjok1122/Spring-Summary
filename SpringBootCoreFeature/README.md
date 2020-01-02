@@ -1,5 +1,38 @@
 # 스프링부트 핵심 기능
 
+- [스프링부트 핵심 기능](#%ec%8a%a4%ed%94%84%eb%a7%81%eb%b6%80%ed%8a%b8-%ed%95%b5%ec%8b%ac-%ea%b8%b0%eb%8a%a5)
+	- [SpringApplication](#springapplication)
+		- [기본 로그 레벨 INFO](#%ea%b8%b0%eb%b3%b8-%eb%a1%9c%ea%b7%b8-%eb%a0%88%eb%b2%a8-info)
+		- [배너](#%eb%b0%b0%eb%84%88)
+		- [EventListener 등록](#eventlistener-%eb%93%b1%eb%a1%9d)
+		- [WebApplicationType 설정](#webapplicationtype-%ec%84%a4%ec%a0%95)
+		- [Application Arguments 사용](#application-arguments-%ec%82%ac%ec%9a%a9)
+		- [ApplicationRunner](#applicationrunner)
+	- [외부 설정](#%ec%99%b8%eb%b6%80-%ec%84%a4%ec%a0%95)
+		- [property 우선순위](#property-%ec%9a%b0%ec%84%a0%ec%88%9c%ec%9c%84)
+			- [예시](#%ec%98%88%ec%8b%9c)
+		- [application.properties의 우선순위](#applicationproperties%ec%9d%98-%ec%9a%b0%ec%84%a0%ec%88%9c%ec%9c%84)
+		- [application.properties 사용](#applicationproperties-%ec%82%ac%ec%9a%a9)
+		- [타입-세이프 프로퍼티 @ConfigurationProperties](#%ed%83%80%ec%9e%85-%ec%84%b8%ec%9d%b4%ed%94%84-%ed%94%84%eb%a1%9c%ed%8d%bc%ed%8b%b0-configurationproperties)
+		- [컨버젼과 유효성 검사](#%ec%bb%a8%eb%b2%84%ec%a0%bc%ea%b3%bc-%ec%9c%a0%ed%9a%a8%ec%84%b1-%ea%b2%80%ec%82%ac)
+	- [프로파일](#%ed%94%84%eb%a1%9c%ed%8c%8c%ec%9d%bc)
+		- [@Profile](#profile)
+		- [프로파일 활성화](#%ed%94%84%eb%a1%9c%ed%8c%8c%ec%9d%bc-%ed%99%9c%ec%84%b1%ed%99%94)
+		- [프로파일 Include](#%ed%94%84%eb%a1%9c%ed%8c%8c%ec%9d%bc-include)
+		- [프로파일용 Properties](#%ed%94%84%eb%a1%9c%ed%8c%8c%ec%9d%bc%ec%9a%a9-properties)
+	- [로깅](#%eb%a1%9c%ea%b9%85)
+	- [테스트](#%ed%85%8c%ec%8a%a4%ed%8a%b8)
+		- [의존성 추가](#%ec%9d%98%ec%a1%b4%ec%84%b1-%ec%b6%94%ea%b0%80)
+		- [@SpringBootTest](#springboottest)
+		- [테스트 코드](#%ed%85%8c%ec%8a%a4%ed%8a%b8-%ec%bd%94%eb%93%9c)
+			- [MockMvc](#mockmvc)
+			- [TestRestTemplate](#testresttemplate)
+			- [WebTestClient](#webtestclient)
+		- [슬라이스 테스트](#%ec%8a%ac%eb%9d%bc%ec%9d%b4%ec%8a%a4-%ed%85%8c%ec%8a%a4%ed%8a%b8)
+	- [Spring-Dev-Tools](#spring-dev-tools)
+		- [라이브 릴로드](#%eb%9d%bc%ec%9d%b4%eb%b8%8c-%eb%a6%b4%eb%a1%9c%eb%93%9c)
+		- [properties](#properties)
+
 ## SpringApplication
 
 ### 기본 로그 레벨 INFO
@@ -247,6 +280,10 @@ test 프로파일의 빈 또한 사용 가능하다.
 
 ## 로깅
 
+추후 업데이트..
+
+<hr>
+
 ## 테스트
 
 ### 의존성 추가
@@ -376,4 +413,26 @@ public class SampleControllerTest {
 }
 ```
 
+<hr>
+
 ## Spring-Dev-Tools
+
+- Spring-Dev-Tools는 개발환경에서 코드의 내용이 변경되면 서버를 재시작해주는 기능을 제공한다. 개발자가 서버를 중지했다가 재시작하는 것보다 빠르다는 장점이 있다.
+
+- SpringBoot는 클래스 로더를 2개 사용하는데 하나는 Base Class Loader라고 해서 변하지 않는 클래스 파일을 로더한다. (의존성 파일) 다른 하나는 restart Class Loader로, 우리의 애플리케이션과 관련된 파일을 로드한다.
+
+- Spirng-Dev-Tools를 의존성에 추가하면 기본적으로 몇 가지 Properties가 설정되는데 이 설정들이 대부분 캐시 사용을 끄는 설정이다.
+
+### 라이브 릴로드
+
+Spring-Dev-Tool는 라이브 릴로드 기능을 제공한다. 라이브 릴로드란 서버가 재시작되었을 때, 브라우저가 자동으로 리프레시 하는 기능이다. 이 기능을 사용하려면 브라우저에 플러그인을 설치해야 한다.
+
+_Vue에서 사용하는 Reactivity와 같은 기능인데 서버에 굳이 이 기능이 필요할까..?_
+
+### properties
+
+- 특정 파일에 대해서는 변경되어도 리스타트 하고 싶지 않을 수 있다. 이때 사용하는 프로퍼티는 `spring.devtools.restart.exclude`이다.
+
+- 리스타트 기능을 끄고 싶다면 `spring.devtools.restart.enabled=false`로 설정하면 된다.
+
+- 라이브 릴로드 기능을 끄고 싶다면 `spring.devtools.liveload.enabled=false`로 설정하면 된다.
