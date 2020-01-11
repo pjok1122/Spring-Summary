@@ -45,3 +45,11 @@
   - Tomcat, Jetty, Undertow
   - HTTPS, HTTP2 설정
 - 독립적으로 실행 가능한 JAR 파일
+
+## [6장. 스프링부트의 핵심 기능](./SpringBootCoreFeature/README.md)
+
+- SpringApplication (배너, 외부인자)
+- 외부설정 (property, 우선순위, 컨버젼, 유효성 검사)
+- 프로파일
+- 로깅
+- 테스트 (테스트 코드 작성, 슬라이스 테스트)
