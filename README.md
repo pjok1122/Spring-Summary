@@ -53,3 +53,13 @@
 - 프로파일
 - 로깅
 - 테스트 (테스트 코드 작성, 슬라이스 테스트)
+
+## [7장. 스프링 웹 기술과 MVC](./SpringMVC/README.md)
+
+### 토비의 스프링 3.1 Vol.2 Chapter 3. Spring MVC 요약정리
+
+- **DispatcherServlet의 동작 과정(Spring MVC 동작 과정)**
+- 컨트롤러의 종류와 핸들러 어댑터 (`@Controller와 AnnotationMethodHandlerAdapter` ...)
+- 핸들러 매핑 (`BeanNameUrlHandlerMapping` `DefaultAnnotationHandlerMapping` ...)
+- 뷰 오브젝트(`InternalResourceView` ...)
+- 뷰 리졸버(`InternalResourceViewResolver` ...)
