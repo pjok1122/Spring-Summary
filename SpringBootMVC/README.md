@@ -259,7 +259,7 @@ Thymeleaf에 대한 문법은 블로그에 정리할 예정. (정리가 끝나�
 
 <br>
 
-**예시 코드**
+### HTML 테스트 코드
 
 - `Thymeleaf`를 MockMvc로 테스트하는 코드
 
@@ -286,4 +286,246 @@ public class SampleControllerTest {
 }
 ```
 
+`HtmlUnit`을 사용하면 템플릿 뷰 테스트를 보다 전문적으로 수행할 수 있다.
+
+### HtmlUnit 테스트 코드
+
+- 의존성 추가
+
+```xml
+<dependency>
+  <groupId> org.seleniumhq.selenium </groupId>
+  <artifactId> htmlunit-driver </artifactId>
+  <scope> test </scope>
+</dependency>
+<dependency>
+  <groupId> net.sourceforge.htmlunit </groupId>
+  <artifactId> htmlunit </artifactId>
+  <scope> test </scope>
+</dependency>
+```
+
+**테스트 코드**
+
+```java
+@RunWith(SpringRunner.class)
+@WebMvcTest(SampleController.class)
+public class SampleControllerTest {
+
+	@Autowired
+	WebClient webClient;
+
+	@Test
+	public void hello() throws Exception {
+		HtmlPage page = webClient.getPage("/hello");
+		HtmlHeading1 h1 = page.getFirstByXPath("//h1");
+		assertThat(h1.getTextContent()).isEqualToIgnoringCase("youngjae");
+	}
+}
+```
+
 <br><hr>
+
+## ExceptionHandler
+
+스프링 MVC의 기본 예외 처리 방법은 `@ControllerAdvice` 애노테이션을 사용하는 것이다.
+
+**예시코드**
+
+```java
+@ControllerAdvice(basePackageClasses = AcmeController.class)
+public class AcmeControllerAdvice extends ResponseEntityExceptionHandler {
+
+    @ExceptionHandler(YourException.class)
+    @ResponseBody
+    ResponseEntity<?> handleControllerException(HttpServletRequest request, Throwable ex) {
+        HttpStatus status = getStatus(request);
+        return new ResponseEntity<>(new CustomErrorType(status.value(), ex.getMessage()), status);
+    }
+
+    private HttpStatus getStatus(HttpServletRequest request) {
+        Integer statusCode = (Integer) request.getAttribute("javax.servlet.error.status_code");
+        if (statusCode == null) {
+            return HttpStatus.INTERNAL_SERVER_ERROR;
+        }
+        return HttpStatus.valueOf(statusCode);
+    }
+
+}
+```
+
+만약 `Controller` 클래스 내에서 발생한 에러를 처리하기 위해서는 `@Controller` 애노테이션이 붙은 클래스 밑에 `@ExceptionHandler("Exception")`가 붙은 메서드를 정의하면 된다.
+
+```java
+@Controller
+public class SampleController {
+  @GetMapping("/hello")
+	public String hello() {
+		throw new MyException();
+	}
+
+	@ExceptionHandler(MyException.class)
+	public @ResponseBody AppError myError(MyException e) {
+		AppError appError = new AppError();
+		appError.setMessage(e.getMessage());
+		appError.setReason("I Don't Know");
+		return appError;
+	}
+}
+```
+
+### BasicExceptionHandler
+
+스프링부트에서 제공해주는 기본 예외 처리기는 `BasicExceptionHandler`이다. 이 객체는 `Controller`이다. 이 객체에는 에러 메시지를 `HTML` 또는 `JSON`으로 응답해주는 기능이 있다.
+
+### 커스텀 에러 페이지
+
+상태 코드에 따라서 보여주는 뷰 페이지를 변경할 수 있다.
+
+`src/main/resources/static/error` `src/main/resources/template/error` 밑에 `404.html`, `5xx.html`과 같이 상태코드로 지정이 가능하다.
+
+매핑이 복잡한 경우에는 `ErrorViewResolver`를 직접 구현하는 Bean을 추가할 수도 있다.
+
+**ErrorViewResolver**
+
+```java
+public class MyErrorViewResolver implements ErrorViewResolver {
+
+    @Override
+    public ModelAndView resolveErrorView(HttpServletRequest request,
+            HttpStatus status, Map<String, Object> model) {
+        // Use the request or status to optionally return a ModelAndView
+        return ...
+    }
+}
+```
+
+<br><hr>
+
+## HATEOAS
+
+`Hypermedia As The Engine Of Application State`의 약자.
+
+- 서버 : 현재 리소스와 연관된 링크 정보들을 클라이언트에게 제공한다.
+- 클라이언트 : 연관된 링크 정보를 바탕으로 리소스에 접근한다.
+- 연관된 링크 정보란 `Relation`과 `Hypertext Reference`를 의미한다.
+
+**HATEOAS가 적용된 JSON**
+
+```json
+{
+  "content": "Hello, World!",
+  "_links": {
+    "self": {
+      "href": "http://localhost:8080/greeting?name=World"
+    }
+  }
+}
+```
+
+HATEOAS를 적용하는 것은 굉장히 귀찮은 일이지만, 엄밀히 말해서 `REST API`라고 불리우기 위해서는 `HATEOAS`를 만족해야 한다.
+
+### Spring HATEOAS
+
+Spring boot는 `spring-boot-starter-hateoas`를 추가하면 `ObjectMapper`, `LinkDiscovers`를 제공한다.
+
+- ObjectMapper : 객체를 json으로 바꿔주는 기능을 제공
+- LinkDiscovers : 클라이언트 쪽에서 링크 정보를 Rel 이름으로 찾을 때 사용할 수 있는 XPath 확장 클래스
+
+**예시 코드**
+
+- 의존성 추가
+
+```xml
+<dependency>
+	<groupId>org.springframework.boot</groupId>
+	<artifactId>spring-boot-starter-hateoas</artifactId>
+</dependency>
+```
+
+- Entity 생성할 때, `RepresentationModel<Hello>`를 상속받아 구현한다.
+
+```java
+public class Hello extends RepresentationModel<Hello> {
+
+	private String msg;
+	private String name;
+
+	public String getMsg() {
+		return msg;
+	}
+	public void setMsg(String msg) {
+		this.msg = msg;
+	}
+	public String getName() {
+		return name;
+	}
+	public void setName(String name) {
+		this.name = name;
+	}
+
+}
+```
+
+- Controller에서 \_link 필드를 삽입한다.
+
+```java
+@RestController
+public class SampleController {
+
+	@GetMapping("/hello")
+	public Hello hello() {
+		Hello hello = new Hello();
+		hello.setMsg("hi~");
+		hello.setName("youngjae");
+		hello.add(linkTo(methodOn(SampleController.class).hello()).withSelfRel());
+		return hello;
+	}
+}
+```
+
+HATEOAS를 구현하는 방법은 다양하나, 쉬운 방법을 선택해 구현했다. `linkTo` 메서드가 존재하는 `org.springframework.hateoas.server.mvc.WebMvcLinkBuilder` 클래스가 `Deprecated` 됐으므로 이제는 다른 방법으로 구현해야 할 것같다.
+
+## CORS
+
+`CORS(Cross Origin Resource Sharing)`는 Origin이 다른 서버에서 자원을 요청하고 공유할 수 있도록 하는 표준 기술이다.
+
+### Origin
+
+여기서 말하는 `Origin`이란 `스키마(http) + 호스트명(localhost) + 포트번호(8080)`를 조합한 것이다. 예를 들어, `http://localhost:8080`은 하나의 Origin이 된다.
+
+### Single Origin Policy
+
+`동일 출처 정책(Single Origin Policy)`는 CORS 같은 상황이 발생했을 때, 외부서버에 요청한 데이터를 브라우저에서 보안 목적으로 차단하는 정책이다. 즉, 보안 상의 이유로 서로 다른 `Origin`에서는 데이터를 받아올 수 없도록 브라우저에서 차단하고 있다. 만약 서로 다른 `Origin`에서 데이터를 주고 받고 싶다면, `Access-Control-Allow-Origin` 헤더를 설정해야 한다.
+
+### @MVC @CrossOrigin
+
+스프링 MVC는 CORS를 손쉽게 다룰 수 있는 많은 지원을 하고 있으며, 스프링 부트에서는 `@CrossOrigin` 애노테이션 하나로도 CORS 허용이 가능하다. `@CrossOrigin`은 `@Controller`, `@RequestMapping`과 함께 쓸 수 있으며, `WebMvcConfigurer`를 구현해, 글로벌 설정도 가능하다.
+
+**예시 코드**
+
+- `@GetMapping`과 함께 쓰는 경우
+
+```java
+@RestController
+public class SampleController {
+	@GetMapping("/hello")
+	@CrossOrigin(origins = "http://localhost:8081")
+	public String hello() {
+		return "hello!";
+	}
+}
+```
+
+- `WebMvcConfigurer`를 이용한 설정
+
+```java
+@Configuration
+public class WebConfig implements WebMvcConfigurer {
+	@Override
+	public void addCorsMappings(CorsRegistry registry) {
+		registry.addMapping("/**")
+		.allowedOrigins("http://localhost:8081");
+	}
+}
+```
