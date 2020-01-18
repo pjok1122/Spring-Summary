@@ -198,12 +198,14 @@ ObjectFactory를 이용하는 방법도 있다. 이 방법은 ApplicationContext
 `Provider<T>`를 이용하는 방법도 있다. 이 방법은 ObjectFactory와 거의 유사하게 `<T>` 타입 파라미터와 `get()`이라는 팩토리 메서드를 가진 인터페이스다. OjbectFactory와 유사하지만 `ObjectFactoryCreatingFactoryBean`을 이용해 빈을 등록하지 않아도 되기 때문에 사용이 편리하다.
 
 ```java
-@Autowired
-Provider<ServiceRequest> serviceRequestProvider;
+@Service
+public class LoginService {
+	@Autowired
+	private ObjectProvider<LoginUser> loginUser;
 
-public void serviceRequestFormSubmit(HttpServletRequest request){
-    ServiceRequest serviceRequest = this.serviceRequestProvider.get();
-    ...
+	public LoginUser getLoginUser() {
+		return loginUser.getIfAvailable();
+	}
 }
 ```
 
@@ -289,5 +291,3 @@ public class AppConfig{
 - 프로토타입과 싱글톤이 아닌 스코프 빈은 DL 방식을 이용하거나, 스코프 프록시 빈을 DI 받는 방법을 사용해야 한다. `(프록시 패턴)`
 - 스프링 3.1은 **애노테이션과 자바 코드를 이용한 빈 메타정보 작성 기능** 을 발전시켜 자바 코드만으로도 스프링 애플리케이션의 모든 빈 설정이 가능하게 해준다.
 - 스프링 3.1의 **프로파일과 프로퍼티 소스로 이뤄진 런타임 환경 추상화 기능** 을 이용하면 환경에 따라 달라지는 빈 구성과 속성 지정 문제를 손쉽게 다룰 수 있다.
-
-

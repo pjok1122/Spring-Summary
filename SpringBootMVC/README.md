@@ -30,7 +30,7 @@ public class UserController{
 
 - `@ResponseBody`는 return 하는 값이 ViewResolver에 의해 물리적인 View 객체로 변환하는 것이 아니라, 반환하는 값이 String임을 의미한다.
 
-- `String Message Converter`는 ResponseBody에 "hello"라는 값을 담아 전송한다.
+- `StringHttpMessageConverter`는 ResponseBody에 "hello"라는 값을 담아 전송한다.
 
 <br>
 

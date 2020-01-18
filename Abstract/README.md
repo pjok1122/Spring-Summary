@@ -1,6 +1,6 @@
 # Validation & Databinding 추상화
 
-- [Validation &amp; Databinding 추상화](#validation-amp-databinding-%ec%b6%94%ec%83%81%ed%99%94)
+- [Validation & Databinding 추상화](#validation--databinding-%ec%b6%94%ec%83%81%ed%99%94)
 	- [Validator](#validator)
 		- [인터페이스](#%ec%9d%b8%ed%84%b0%ed%8e%98%ec%9d%b4%ec%8a%a4)
 		- [스프링 부트 2.0.5 이상 버전](#%ec%8a%a4%ed%94%84%eb%a7%81-%eb%b6%80%ed%8a%b8-205-%ec%9d%b4%ec%83%81-%eb%b2%84%ec%a0%84)
@@ -30,26 +30,72 @@
 - 비즈니스 로직에서 검증해야 하는 경우, validate를 직접 정의하여 사용한다.
 - https://beanvalidation.org/
 
+**예시 코드**
+
+- `Setter`, `변수`에 `@NotNull`과 같은 Annotation을 사용할 수 있다. `javax.validation.constraints.*`에 정의되어있음.
+
 ```java
-public class Event {
+public class Member {
+	@NotNull @Min(value=0)
+	private int id;
 	@NotNull
-	String title;
-    ...
+	private String name;
+	@NotNull
+	private String alias;
+
+	// Getter & Setter
+}
+```
+
+- 검증하는 코드는 단순히 `@Valid`만 추가하면 된다.
+
+```java
+@RestController
+public class SampleController {
+
+	@PostMapping("/hello")
+	public Member hello(@RequestBody @Valid Member member, Errors errors) {
+		return member;
+	}
+}
+```
+
+- Validator를 커스텀하게 정의해서 사용해야 하는 경우는 다음과 같이 정의해서 사용할 수 있다.
+
+```java
+@Component
+public class MemberValidator {
+
+	public void validate(Member member, Errors errors) {
+		System.out.println("member.getName().length()"+ member.getName().length());
+		System.out.println("member.getAlias().length()"+ member.getAlias().length());
+		if (member.getName().length() < member.getAlias().length()) {
+			errors.rejectValue("alias", "toolong", "length of alias is less than length of name");
+		}
+	}
 }
 ```
 
 ```java
-@Autowired
-Validator validator;
-public void run(ApplicationArguments args) throws Exception {
-    System.out.println(validator.getClass());
+@RestController
+public class SampleController {
 
-    Event event = new Event();
-    Errors errors = new BeanPropertyBindingResult(event, "event"); //사실 이렇게는 거의 사용 안함.
-    validator.validate(event, errors);
+	@Autowired
+	MemberValidator validator;
+
+	@PostMapping("/hello")
+	public Member hello(@RequestBody @Valid Member member, Errors errors) {
+		validator.validate(member, errors);
+		if(errors.hasErrors()) {
+			member.setAlias("None");
+		}
+
+		return member;
+	}
+}
 ```
 
-<hr>
+<br><hr>
 
 ## DataBinding
 
@@ -103,6 +149,7 @@ PropertyEditor는 인터페이스로 구현해야 할 메서드가 많이 있다
 ```java
 public class EventConverter {
 
+	@Component
 	public static class StringToEventConverter implements Converter<String, Event>{
 		@Override
 		public Event convert(String source) {
@@ -110,6 +157,7 @@ public class EventConverter {
 		}
 	}
 
+	@Component
 	public static class EventToStringConverter implements Converter<Event, String>{
 		@Override
 		public String convert(Event source) {
