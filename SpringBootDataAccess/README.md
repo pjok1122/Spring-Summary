@@ -129,6 +129,8 @@ spring.datasource.username=yjhn0715
 spring.datasource.password=1234
 ```
 
+- property에 `Driver`를 명시하지 않는 이유는, Spring boot가 url을 참고하여, `Mysql Driver`를 사용한다.
+
 **예제 코드**
 
 ```java
@@ -177,5 +179,213 @@ docker run -p 3306:3306 --name mysql_boot -e MYSQL_ROOT_PASSWORD=1 -e MYSQL_DATA
 Mysql 라이센스(GPL) 는 소스 코드 공개의 의무가 있다. 따라서 Mysql보단 MariaDB를 사용하자. 사용 방법은 동일하다. docker 생성 시, `-d mysql`을 `-d mariadb`로만 변경한다.
 
 - 사실 `mariadb`보다도 `PostgreSQL`을 사용하는게 낫다.
+
+<br><hr>
+
+## PostgreSQL
+
+위와 내용이 겹치는 부분이 많으므로 설명은 생략.
+
+### Docker
+
+```
+컨테이너 생성
+docker run -p 5432:5432 -e POSTGRES_PASSWORD=pass -e POSTGRES_USER=yjhn0715 -e POSTGRES_DB=springdb --name postgres_boot -d postgres
+
+docker exec -i -t postgres_boot bash
+
+su - postgres
+psql springboot
+
+윈도우에서는 이 명령어로 해야함.
+psql --username=yjhn0715 --dbname=springdb
+
+데이터베이스 조회
+\list
+
+테이블 조회
+\dt
+
+쿼리
+SELECT * FROM account;
+```
+
+### 의존성 및 프로퍼티 설정
+
+- Postgre Driver 의존성 추가
+
+```xml
+<dependency>
+	<groupId>org.springframework.boot</groupId>
+	<artifactId>spring-boot-starter-jdbc</artifactId>
+</dependency>
+<dependency>
+	<groupId>org.springframework.boot</groupId>
+	<artifactId>spring-boot-starter-web</artifactId>
+</dependency>
+
+<dependency>
+	<groupId>org.postgresql</groupId>
+	<artifactId>postgresql</artifactId>
+	<scope>runtime</scope>
+```
+
+- 프로퍼티 설정
+
+```properties
+spring.datasource.hikari.maximum-pool-size=8
+spring.datasource.url=jdbc:postgresql://localhost:5432/springdb
+spring.datasource.username=yjhn0715
+spring.datasource.password=pass
+```
+
+**예제 코드**
+
+```java
+@Component
+public class PgRunner implements ApplicationRunner {
+
+	@Autowired
+	JdbcTemplate jdbcTemplate;
+
+	@Override
+	public void run(ApplicationArguments args) throws Exception {
+		System.out.println(jdbcTemplate.getDataSource().getClass());
+		System.out.println(jdbcTemplate.getDataSource().getConnection().getMetaData().getDriverName());
+
+
+		jdbcTemplate.execute("CREATE TABLE account(id INTEGER NOT NULL, name VARCHAR(255), PRIMARY KEY(id))");
+		jdbcTemplate.update("INSERT INTO account VALUES(?,?)", 1, "yj");
+		jdbcTemplate.update("INSERT INTO account VALUES(?,?)", 2, "hani");
+	}
+
+}
+```
+
+- 생성된 테이블과 튜플들은 터미널에서도 확인할 수 있지만, `dbeaver`와 같은 `DB 클라이언트 소프트웨어`를 이용하는 것이 더 편리하다.
+
+<br><hr>
+
+## Spring Data JPA
+
+스프링 데이터 JPA는 `객체`와 `릴레이션`을 맵핑할 때 발생하는 개념적 불일치를 해결하는 프레임워크라고 할 수 있다. 여기서 말하는 개념적 불일치의 예로는 `객체의 equal 메서드`와 `릴레이션의 equal`의 차이라던가, `릴레이션`에 존재하는 `Key`를 `객체`에서는 어떻게 나타낼 것인가 등 많은 문제점이 있다.
+
+- JPA는 `ORM(Object Relational Mapping)`을 위한 Java EE 표준이다.
+
+- 스프링 데이터 JPA는 `Repository` 빈을 자동으로 생성해주며, 쿼리 메서드 또한 자동으로 구현해준다. 따라서 간단한 쿼리의 경우에는 개발자가 직접 작성할 필요가 없다.
+
+- 스프링부트를 사용하는 경우에는 `@EnableJpaRepositories`을 자동으로 설정해주기 때문에 추가 설정할 내용이 없다.
+
+- Spring Data JPA는 JPA를 사용하여 동작하고, JPA는 `hibernate`의 구현체다. hibernate는 내부적으로 DataSource를 사용하고 있으니, 결국은 JDBC의 모든 기능을 사용한다고 볼 수 있다.
+
+### Spring Data JPA 사용하기
+
+- 의존성 추가
+
+```xml
+<dependency>
+<groupId> org.springframework.boot </groupId>
+<artifactId> spring-boot-starter-data-jpa </artifactId>
+</dependency>
+```
+
+- @Entity 클래스 만들기
+
+```java
+@Entity
+public class Account {
+	@Id @GeneratedValue
+	private long id;
+	private String username;
+	private String password;
+
+	//Getter & Setter & Constructor
+	//equals & hashCode
+}
+```
+
+- Repository 만들기
+
+```java
+public interface AccountRepository extends JpaRepository<Account, Long>{
+	Account findByUsername(String username);
+}
+```
+
+JpaRepository`<Entity, id>`를 상속하여 구현한다. 인터페이스 내에 `findByUsername`과 같은 메서드를 정의해두면, Spring Data JPA가 자동으로 구현해준다.
+
+- DB 설정 (위와 동일하게 `properties`를 작성하면 된다.)
+
+```properties
+spring.datasource.hikari.maximum-pool-size=8
+spring.datasource.url=jdbc:postgresql://localhost:5432/springdb
+spring.datasource.username=yjhn0715
+spring.datasource.password=pass
+```
+
+**예제 코드**
+
+테스트 코드에서 데이터베이스를 사용하면, DB에 반영되는 문제점이 발생할 수 있다. 따라서 `properties` 파일을 Test 폴더에 새로 정의하거나, 슬라이스 테스트를 하는 것이 좋다. **슬라이스 테스트를 하는 경우에는 반드시 인메모리 데이터베이스를 사용해야 한다.**
+
+```java
+@RunWith(SpringRunner.class)
+@DataJpaTest
+public class AccountTest {
+	@Autowired
+	AccountRepository accountRepository;
+
+	@Test
+	public void di() {
+		Account account = new Account();
+		account.setUsername("yjhn0715");
+		account.setPassword("1234");
+
+		Account saveAccount = accountRepository.save(account);
+		assertThat(saveAccount).isNotNull();
+
+		Account existingAccount = accountRepository.findByUsername(saveAccount.getUsername());
+		assertThat(existingAccount).isNotNull();
+	}
+}
+```
+
+JPA는 자세히 다뤄야 할 내용이 많으므로 별도의 깃헙 repo에 정리할 예정.
+
+<br><hr>
+
+## Spring에서 JPA 초기화
+
+Spring은 Entity 스캔을 통해 `@Entity` 애노테이션이 붙은 클래스를 찾는다. 만약 `spring.jpa.generate-ddl=true`라고 설정되어있다면, `DDL(Data Define Language)`을 작성하여 DB에 적용한다.
+
+`DDL`에는 다양한 옵션을 줄 수 있다. `spring.jpa.hibernate.ddl-auto`를 설정하면 된다.
+
+- `none` : 아무것도 실행하지 않는다.
+- `create` : 기존에 있는 테이블을 drop하고 새로운 테이블을 만든다.
+- `update` : 테이블에 변경 사항이 있을 경우 이를 반영한다. 단, 컬럼의 이름이 변경된 경우 스키마에는 변경 전 컬럼과 변경 후 컬럼이 모두 남게 된다.
+- `validate` : 운영모드에 주로 사용하는 옵션으로, `@Entity`와 현재 스키마가 일치하는지 확인한다. 차이가 있다면 애플리케이션 종료.
+
+_cf)어떤 테이블이 생성되었는지 확인하고 싶다면 `spring.jpa.show-sql=true`로 설정한다._
+
+### SQL Script
+
+Spring은 기본 값으로 classpath 루트에 `schema.sql`, `schema-{platform}.sql`이 있으면 서버 시작 시 이 sql을 실행한다. 따라서 `schema.sql`에 DDL을 작성하고, `data.sql`에 `DML(Data Manipulation Language)`를 작성하는 방법도 있다.
+
+`DML`에 한글이 들어가는 경우, 스크립트가 깨질 수 있으므로, `spring.datasource.sql-script-encoding=UTF-8`로 설정한다.
+
+**예제 코드**
+
+```properties
+spring.datasource.hikari.maximum-pool-size=8
+spring.datasource.url=jdbc:postgresql://localhost:5432/springdb
+spring.datasource.username=yjhn0715
+spring.datasource.password=pass
+
+spring.jpa.generate-ddl=false
+spring.jpa.hibernate.ddl-auto=validate
+
+spring.jpa.show-sql=true
+spring.datasource.sql-script-encoding=UTF-8
+
+```
 
 <br><hr>
