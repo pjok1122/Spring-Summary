@@ -370,7 +370,9 @@ _cf)어떤 테이블이 생성되었는지 확인하고 싶다면 `spring.jpa.sh
 
 Spring은 기본 값으로 classpath 루트에 `schema.sql`, `schema-{platform}.sql`이 있으면 서버 시작 시 이 sql을 실행한다. 따라서 `schema.sql`에 DDL을 작성하고, `data.sql`에 `DML(Data Manipulation Language)`를 작성하는 방법도 있다.
 
-`DML`에 한글이 들어가는 경우, 스크립트가 깨질 수 있으므로, `spring.datasource.sql-script-encoding=UTF-8`로 설정한다.
+- `DML`에 한글이 들어가는 경우, 스크립트가 깨질 수 있으므로, `spring.datasource.sql-script-encoding=UTF-8`로 설정한다.
+
+- initalization을 허용하는 프로퍼티인 `spring.datasource.initialization-mode`도 always로 변경한다.
 
 **예제 코드**
 
@@ -385,7 +387,340 @@ spring.jpa.hibernate.ddl-auto=validate
 
 spring.jpa.show-sql=true
 spring.datasource.sql-script-encoding=UTF-8
+spring.datasource.initialization-mode=always
 
 ```
 
+<br><hr>
+
+## 데이터 마이그레이션
+
+DB 마이그레이션 툴로 가장 많이 사용되는 제품은 `Flyway`와 `Liquibase`가 있다. DB 마이그레이션 툴은 `DB 스키마`와 `데이터`를 버전 관리할 수 있도록 도와주는 툴이다.
+
+### Flyway 살펴보기
+
+- flyway를 사용하기 위해서는 가장 먼저 의존성을 추가해줘야 한다.
+
+```xml
+<dependency>
+	<groupId>org.flywaydb</groupId>
+	<artifactId>flyway-core</artifactId>
+</dependency>
+```
+
+- 마이그레이션 디렉터리 생성
+
+`src/main/resources` 밑에 `/db/migration` 또는 `/db/migration/{vendor}` 폴더를 생성한다. 이 값은 `spring.flyway.locations` 프로퍼티를 이용하여 변경이 가능하다.
+
+- 마이그레이션 파일 이름
+
+마이그레이션 파일 이름은 반드시 `V2__init.sql`, `V3__add_active.sql`과 같은 형태로 작성해야 한다. (첫글자는 반드시 `V`, 버전은 순차적으로, 버전과 내용 사이에는 `__` 언더바 두개 사용.)
+
+- properties 설정
+
+```properties
+spring.datasource.hikari.maximum-pool-size=8
+spring.datasource.url=jdbc:postgresql://localhost:5432/springdb
+spring.datasource.username=yjhn0715
+spring.datasource.password=pass
+
+spring.jpa.generate-ddl=false
+spring.jpa.hibernate.ddl-auto=validate
+
+spring.jpa.show-sql=true
+spring.datasource.sql-script-encoding=UTF-8
+spring.datasource.initialization-mode=always
+spring.flyway.baseline-on-migrate = true
+```
+
+핵심은 `spring.flyway.baseline-on-migrate`를 true로 설정해야한다. 그럼 V1에 해당하는 `schema_history`가 생성된다. 따라서 우리의 버전관리는 V1을 제외하고 V1보다 큰 숫자를 넣어줘야 한다.
+
+ex) `V2__init.sql`
+
+<br><hr>
+
+## Redis
+
+Redis는 NoSQL로 `캐시`, `메세지 브로커`, `키/밸류 스토어` 등으로 사용할 수 있다.
+
+### docker container 생성
+
+```docker
+docker run -p 6379:6379 --name redis_boot
+
+docker exec -i -t redis_boot redis-cli
+
+명령어
+keys *
+get {key}
+hget {key} {column}
+hgetall {key}
+```
+
+### Spring Boot Redis 사용하기
+
+- 의존성 추가
+
+```xml
+<dependency>
+	<groupId>org.springframework.boot</groupId>
+	<artifactId>spring-boot-starter-data-redis</artifactId>
+</dependency>
+```
+
+- Account 생성하기
+
+```java
+@RedisHash("accounts")
+public class Account {
+
+	@Id
+	private String id;
+	private String name;
+	private String email;
+
+	//Getter & Setter
+}
+```
+
+- AccountRepository 생성하기
+
+```java
+public interface AccountRepository extends CrudRepository<Account, String>{
+	//CrudRepository는 Spring Repository 인터페이스 중 하나일 뿐. 레디스와 무관.
+}
+```
+
+- StringRedisTemplate 사용하기
+
+**예제 코드**
+
+```java
+@Component
+public class RedisRunner implements ApplicationRunner {
+
+	@Autowired
+	StringRedisTemplate redisTemplate;
+
+	@Autowired
+	AccountRepository accountRepository;
+
+	@Override
+	public void run(ApplicationArguments args) throws Exception {
+		ValueOperations<String, String> values = redisTemplate.opsForValue();
+		values.set("key", "value");
+		values.set("name", "yj");
+		values.set("phone", "010-1111-2222");
+
+		Account account = new Account();
+		account.setEmail("yjhn0715@uos.ac.kr");
+		account.setName("yj");
+		accountRepository.save(account); //account에 id가 새로 저장됨.
+
+		Optional<Account> byId = accountRepository.findById(account.getId());
+		System.out.println(byId.get().getId());
+		System.out.println(byId.get().getEmail());
+		System.out.println(byId.get().getName());
+
+	}
+
+}
+```
+
+<br><hr>
+
+## MongoDB
+
+MongoDB는 JSON 기반의 도큐먼트 데이터베이스다.
+
+### docker container 생성
+
+```docker
+docker run -p 27017:27017 --name mongo_boot -d mongo
+docker exec -i -t mongo_boot bash
+mongo
+
+명령어
+use 데이터베이스명 : 데이터베이스 생성
+db : 현재 사용중인 데이터베이스 확인
+show dbs : 데이터베이스 리스트
+
+db.createCollection(name, [option]) : 컬렉션 생성
+show collections : 컬렉션 조회
+db.컬렉션명.drop() : 컬렉션 삭제
+
+db.컬렉션명.insert(document) : 도큐먼트 추가
+db.컬렉션명.find([query, projection])
+
+query는 document를 조회할 기준. 모든 document를 조회할 때는 {}를 사용한다.
+projection은 조회에 보여질 field를 정한다.
+
+db.컬렉션명.remove(criteria[, justOne]) : document를 삭제한다.
+기본값으로 조건과 일치하는 도큐먼트는 모두 삭제한다.
+```
+
+### Springboot MongoDB 사용하기
+
+- 의존성 추가
+
+```xml
+<dependency>
+	<groupId>org.springframework.boot</groupId>
+	<artifactId>spring-boot-starter-data-mongodb</artifactId>
+</dependency>
+<dependency>
+	<groupId>de.flapdoodle.embed</groupId>
+	<artifactId>de.flapdoodle.embed.mongo</artifactId>
+	<scope>test</scope>
+</dependency>
+```
+
+내장형 몽고 DB는 테스트할 때 사용되는 DB로, 별도의 설정없이 의존성만 추가하면 사용 가능하다.
+
+- Account 만들기
+
+```java
+@Document(collection = "accounts")
+public class Account {
+
+	@Id
+	private String id;
+	private String name;
+	private String email;
+
+	//Getter & Setter
+}
+```
+
+- AccountRepository 만들기
+
+```java
+public interface AccountRepository extends MongoRepository<Account, String>{
+	Optional<Account> findByEmail(String email);
+}
+```
+
+- 테스트 코드 작성
+
+```java
+@RunWith(SpringRunner.class)
+@DataMongoTest
+public class AccountRepositoryTest {
+
+	@Autowired
+	AccountRepository accountRepository;
+
+	@Test
+	public void findByEmail() {
+		Account account = new Account();
+		account.setEmail("abc@abc.com");
+		account.setName("abc");
+
+		accountRepository.save(account);
+		Optional<Account> byId = accountRepository.findById(account.getId());
+		assertThat(byId).isNotEmpty();
+		Optional<Account> byEmail = accountRepository.findByEmail(account.getEmail());
+		assertThat(byEmail).isNotEmpty();
+		assertThat(byEmail.get().getName()).isEqualTo("abc");
+	}
+}
+```
+
+<br><hr>
+
+## Neo4j
+
+Neo4j는 노드간의 연관관계를 저장하고 관리하는 데에 유리한 그래프 데이터베이스다. 하위 호환성이 좋지 않다는 단점이 있음.
+
+### docker container 생성
+
+```docker
+docker run -p 7474:7474 -p 7687:7687 -d --name noe4j_boot neo4j
+
+브라우저로 데이터 관리 가능.
+http://localhost:7474/browser
+
+초기 아이디 : neo4j
+초기 비밀번호 : neo4j
+```
+
+### Springboot Neo4j 사용하기
+
+- 의존성 추가
+
+```xml
+<dependency>
+	<groupId>org.springframework.boot</groupId>
+	<artifactId>spring-boot-starter-data-neo4j</artifactId>
+</dependency>
+```
+
+- 프로퍼티 설정
+
+```properties
+spring.data.neo4j.username=neo4j
+spring.data.neo4j.password=1111
+```
+
+- Account & Role 생성
+
+```java
+@NodeEntity
+public class Account {
+	@Id @GeneratedValue
+	private Long id;
+	private String name;
+	private String email;
+	@Relationship("has")
+	private Set<Role> roles = new HashSet<>();
+	// Getter & Setter
+}
+
+@NodeEntity
+public class Role {
+
+	@Id @GeneratedValue
+	private Long id;
+	private String name;
+	//Getter & Setter
+}
+```
+
+- AccountRepository 생성
+
+```java
+public interface AccountRepository extends Neo4jRepository<Account, Long> {}
+```
+
+- Neo4jRunner 생성 (`SessionFactory`를 이용할 수도 있다.)
+
+```java
+@Component
+public class Neo4jRunner implements ApplicationRunner {
+
+	@Autowired
+	AccountRepository accountRepository;
+
+	@Override
+	public void run(ApplicationArguments args) throws Exception {
+		Account account = new Account();
+		account.setEmail("aaaa@aaaa");
+		account.setName("aaaa");
+
+		Role role = new Role();
+		account.getRoles().add(role);
+		account.getRoles().add(new Role());
+
+		accountRepository.save(account);
+		System.out.println("finished");
+	}
+}
+
+```
+
+- 브라우저에서 노드 확인
+
+![neo4j_node](../images/neo4j_browser.png)
+
+[스프링부트 데이터 액세스 참고자료](https://docs.spring.io/spring-boot/docs/current-SNAPSHOT/reference/htmlsingle/#boot-features-sql)
 <br><hr>
