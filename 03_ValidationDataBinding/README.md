@@ -215,6 +215,65 @@ public class WebConfig implements WebMvcConfigurer {
 }
 ```
 
+**예제 코드**
+
+```java
+public class Item {
+	private long nubmer;
+	private String desc;
+	//Getter & Setter
+}
+```
+
+- 컨트롤러
+
+```java
+@Controller
+public class SampleController {
+	// String "2"를 Item 타입으로 변환해서 받기를 원함.
+	@GetMapping("/item/{item}")
+	public @ResponseBody String Item(@PathVariable Item item){
+		System.out.println(item.getNubmer());
+		return Long.toString(item.getNubmer());
+	}
+}
+```
+
+- Converter 등록.
+
+```java
+@Component
+public class StringToItem implements Converter<String, Item>{
+
+		@Override
+		public Item convert(String source) {
+			Item item = new Item();
+			item.setNubmer(Integer.parseInt(source));
+			return item;
+		}
+	}
+}
+```
+
+- 테스트 코드
+
+```java
+@RunWith(SpringRunner.class)
+@WebMvcTest(value= {StringToItem.class, SampleController.class})
+public class SampleControllerTest {
+
+	@Autowired
+	MockMvc mockMvc;
+
+	@Test
+	public void string_to_item() throws Exception {
+		mockMvc.perform(get("/item/2"))
+		.andExpect(status().isOk())
+		.andExpect(content().string("2"));
+	}
+}
+```
+
 ### ConversionService
 
 ![ConversionService](../images/ConversionService.png)
