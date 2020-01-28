@@ -323,8 +323,8 @@ public class SampleControllerTest{
 	@Test
 	public void hello() throws Exception{
 		mockMvc.perform(get("/hello"))
-		.andExcept(status().isOk())
-		.andExcept(content().string("Hello youngjae"))
+		.andExpect(status().isOk())
+		.andExpect(content().string("Hello youngjae"))
 		.andDo(print());
 	}
 }
@@ -406,8 +406,8 @@ public class SampleControllerTest {
     	when(mockSampleService.getName()).thenReturn("yj");
 
 		mockMvc.perform(get("/hello"))
-		.andExcept(status().isOk())
-		.andExcept(content().string("Hello yj"))
+		.andExpect(status().isOk())
+		.andExpect(content().string("Hello yj"))
 		.andDo(print());
     }
 }
