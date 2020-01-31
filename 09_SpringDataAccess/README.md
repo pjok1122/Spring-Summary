@@ -171,3 +171,159 @@ SimpleJdbcInsert registerInsert = new SimpleJdbcInsert(dataSource)
 int key = registerInsert.executeAndReturnKey(
         new MapSqlParameterSource("name", "Spring")).intValue();
 ```
+
+<br><hr>
+
+## MyBatis
+
+`MyBatis`는 자바 객체와 SQL 문 사이의 자동매핑 기능을 지원하는 ORM 프레임워크다. `MyBatis`의 가장 큰 특징은 SQL을 자바 코드에서 분리해서 별도의 XML 파일 안에 작성하고 관리할 수 있다는 점이다. (XML 말고 `@Select`와 같은 애노테이션을 이용해서 매핑할 수도 있다.)
+
+MyBatis도 내부적으로는 JDBC API를 사용하기 때문에 JDBC 커넥션에 관한 메타정보들을 properties에 저장해야 한다.
+
+```properties
+spring.datasource.url=jdbc:postgresql://localhost:5432/springdb
+spring.datasource.username=yjhn0715
+spring.datasource.password=pass
+```
+
+### 객체 생성
+
+```java
+package youngjae.study.model;
+
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
+@ToString
+@Alias("car")
+public class Car {
+	private int id;
+	private String name;
+	private String description;
+}
+```
+
+롬복을 이용해서 `Car`라는 객체를 만들었다. 파일의 경로는 `youngjae.study.model`이다.
+
+### 객체 매퍼 생성
+
+```java
+package youngjae.study.mapper;
+
+@Mapper
+public interface CarMapper {
+	Car findById(int id);
+	List<Car> selectAllCars();
+	void insertCar(Car car);
+}
+```
+
+`@Mapper` 애노테이션이 붙은 인터페이스는 `MapperScan`에 의해 읽어져, CarMapper를 구현한 프록시가 생성된다. 현재 파일의 경로는 `youngjae.study.mapper.*` 이므로 이 경로를 `MapperScan` 대상으로 지정해야 한다.
+
+### MapperScan
+
+```java
+package youngjae.study.config;
+
+@Configuration
+@MapperScan(basePackages = "youngjae.study.mapper")
+public class MybatisConfig {}
+```
+
+MapperScan은 `basePackages`를 지정하여 어느 패키지를 `@Mapper` 스캔 대상으로 지정할지 결정할 수 있다. 우리의 `CarMapper`는 `youngjae.study.mapper.*`에 존재하므로 위의 예시처럼 경로를 전달한다.
+
+### 매핑파일(\*.xml)
+
+이제 SQL문을 작성하고 객체와 연결시켜주는 xml파일을 생성해야 한다. 위에서 CarMapper 인터페이스가 `findById`, `selectAllCars`, `insertCar` 3개의 메서드를 가지고 있으므로 3개의 메소드에 대한 SQL문을 작성해야 한다.
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="youngjae.study.mapper.CarMapper">
+
+	<select id="findById" parameterType="int" resultType="youngjae.study.model.Car">
+		SELECT ID, NAME, DESCRIPTION
+		FROM CAR
+		WHERE ID = #{id}
+	</select>
+
+	<select id="selectAllCars" resultType="car">
+		SELECT *
+		FROM CAR
+	</select>
+
+	<insert id="insertCar">
+		INSERT INTO CAR(NAME, DESCRIPTION)
+		VALUES(#{name}, #{description})
+	</insert>
+
+</mapper>
+```
+
+- DOCTYPE 부분은 매핑 파일이라는 정보를 의미한다.
+- `namespace`는 해당 xml에서 사용되는 경로는 `youngjae.study.mapper.CarMapper`로 시작한다는 의미이다. 이렇게 namespace를 두는 이유는 객체와 xml 파일에 있는 `id`를 쉽게 매핑시키기 위함이다. 우리가 앞서 정의한 `Mapper`에서 `findById`에 대한 경로를 나열해보면, `youngjae.study.mapper.CarMapper.findById`가 된다. 따라서 우리는 `<select id="youngjae.study.mapper.CarMapper.findById"> SQL Query </select>`로 매핑을 시킬 수 있다. 하지만 이렇게 작성하면 반복되는 코드가 많아지고 길이가 길어진다. 따라서 우리는 `youngjae.study.mapper.CarMapper`를 namespace로 두고 사용한다. 사실상 baseURL과 비슷한 개념이라고도 볼 수 있겠다.
+
+- `parameterType`은 SQL문의 매개변수로 전달되는 객체의 타입을 의미한다.
+
+- `resultType`은 SQL 쿼리의 실행결과로 전달되는 객체의 타입을 의미하는데, 결과가 `List` 타입이어도 요소 한개의 타입만을 작성한다. 따라서 selectAllCars()의 타입도 컬렉션이 아니라 `car`라는 단일 객체 타입이다.
+
+- `resultType`은 `findById`에 명시한 것처럼 `youngjae.study.model.Car`라는 풀네임으로 작성해도 되지만, `Alias`를 이용해서 줄여쓸 수 있다. `youngjae.study.model.Car`에 대한 Alias를 `car`로 지정해뒀다고 보면 된다.
+
+- `Alias`를 지정하는 방법은 해당 클래스를 정의할 때, `@Alias("car")`와 같이 별칭을 지정하면 끝이다.
+
+### properties
+
+위의 설정대로 진행해도 어플리케이션은 동작하지 않는다. 가장 큰 이유는 매핑파일(`*.xml`)을 어느 패키지에서 읽어야 할지 결정하지 않았다는 사실과 @Alias 애노테이션을 어느 패키지에서 읽어야 할지 결정하지 않았기 때문이다.
+
+```properties
+# 어느 파일이 mapper.xml의 대상인지 결정.
+mybatis.mapper-locations=classpath:/mapper/*.xml
+
+# alias를 읽어들일 패키지가 어디인지 결정.
+mybatis.type-aliases-package=youngjae.study.model
+```
+
+### 테스트 코드
+
+```java
+@Component
+public class MybatisRunner implements ApplicationRunner {
+
+	@Autowired
+	CarMapper carMapper;
+
+	@Override
+	public void run(ApplicationArguments args) throws Exception {
+		carMapper.insertCar(Car.builder().name("carA").description("cheaper").build());
+		carMapper.insertCar(Car.builder().name("carB").build());
+		List<Car> selectAllCars = carMapper.selectAllCars();
+		selectAllCars.forEach(System.out::println);
+	}
+}
+```
+
+```java
+@RunWith(SpringRunner.class)
+@SpringBootTest
+public class CarMapperTest {
+
+	@Autowired
+	CarMapper carMapper;
+
+	@Test
+	public void select_car() {
+		carMapper.insertCar(Car.builder().name("carC").description("car C is faster than others").build());
+		List<Car> selectAllCars = carMapper.selectAllCars();
+		selectAllCars.forEach(System.out::println);
+	}
+}
+```
+
+assertThat()으로 검증하는 것이 일반적이지만, 마땅한 테스트 코드를 만들기가 애매해서 가시적으로 출력문만 뽑아봤다.
+
+<br><hr>
