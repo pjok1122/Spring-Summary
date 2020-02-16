@@ -55,6 +55,8 @@ Aspect로 분리한 코드들이 컴파일 시에 주입되도록 하는 방법�
 
 - 프록시 기반의 AOP 구현체
 - 스프링 빈에만 AOP를 적용할 수 있다.
+- 빈에 AOP를 적용하면, 그 빈 자체를 프록시 빈으로 생성한다.
+- 인터페이스를 구현한 객체에 AOP를 적용하는 것이 좋다. 프록시 빈은 일반적으로 인터페이스에 기반을 두고 구현한다. 클래스를 기반으로 둘 경우 CGlib를 사용한다.
 - 모든 AOP 기능을 제공하는 것이 목적이 아니라, 스프링 IoC와 연동하여 엔터프라이즈 애플리케이션에서 가장 흔한 문제에 대한 해결책을 제공하는 것이 목적이다.
   ex) 중복코드, 프록스 클래스 작성의 번거로움 등.
 
@@ -156,17 +158,93 @@ Aspect 클래스는 Bean으로 등록되어있어야하며, @Aspect 애노테이
 
 ```java
 	@Before("bean(myEventService)")
-	public void Hello() {
+	public void Hello(JoinPoint jp) {
 		System.out.println("Hello");
 	}
 }
 ```
 
+<br>
+
+이번에는 Session Validation을 해주는 Aspect를 만들어보자. `ProceedingJoinPoint`와 `JoinPoint`에는 타겟 메소드의 이름, 매개변수 등을 저장하고 있는 `Signiture`라는 객체가 있다. 이번에는 타겟 메소드에 같이 넘겨진 매개변수를 불러와 세션을 검증하는 코드를 살펴보자.
+
+```java
+	@Around("@annotation(project.board.annotation.LoginAuth)")	//패키지 경로가 다를 경우.
+	public String loginAuth(ProceedingJoinPoint pjp) throws Throwable {
+		HttpSession session = null;
+		for(Object o : pjp.getArgs()) {		//pjp.getArgs()는 Target에 넘겨진 매개변수들.
+			if(o instanceof HttpSession) {
+				session = (HttpSession) o;
+			}
+		}
+		
+		if(session.getAttribute("memberId")==null) {
+			return "member/login";
+		}
+		return (String) pjp.proceed();
+	}
+```
+
 #### 3. 포인트컷 표현식
 
 - `execution("execution 표현식")`
+  
+execution의 사용법은 다음과 같다.
+
+`execution([접근제한자 패턴] 리턴 값 패턴 [타입패턴.] 메소드이름 패턴 (파라미터 타입 패턴))`
+
+여기서 []로 묶여있는 부분은 생략이 가능하다. `all()`이라는 Pointcut을 정의하고 `Advice`에서 이 포인트컷을 사용하는 예제를 보자.
+
+`execution(* hello(..))`는 모든 리턴타입, 메소드 이름 hello, 모든 매개변수를 의미한다.
+
+```java
+public class 
+	@Pointcut("execution(* hello(..))")
+	private void all(){}
+
+	@Around("all()")
+	public Object printParametersAndReturnVal(ProceedingJoinPoint pjp) throws Throwable{
+		...
+		Object ret = pjp.proceed();
+		...
+		return ret;
+	}
+```
+
 - `@annotation("annotation 이름")`
+
+애노테이션을 이용하면 메소드 단위로 AOP를 적용할 수 있다는 장점이 있다.
+
+```java
+@Documented
+@Target(ElementType.METHOD)
+@Retention(RetentionPolicy.CLASS)
+public @interface LoginAuth {	}
+
+@Component
+@Aspect
+public class SessionValidAspect {
+	
+	@Around("@annotation(project.board.annotation.LoginAuth)")
+	public String loginAuth(ProceedingJoinPoint pjp) throws Throwable {
+		HttpSession session = null;
+		for(Object o : pjp.getArgs()) {
+			if(o instanceof HttpSession) {
+				session = (HttpSession) o;
+			}
+		}
+		
+		if(session.getAttribute("memberId")==null) {
+			return "member/login";
+		}
+		return (String) pjp.proceed();
+	}
+}
+```
+
 - `bean("빈 이름")`
+
+특정 빈에 AOP를 적용할 수 있으나, 쓰임새가 가장 적다.
 
 #### 4. 어드바이스 정의
 
