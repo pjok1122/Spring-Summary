@@ -1,8 +1,8 @@
 # 스프링 웹 기술과 MVC
 
-- 스프링 서블릿/스프링 MVC는 스프링이 직접 제공하는 서블릿 기반의 MVC 프레임워크다. 애노테이션 설정과 유연한 핸들러 메소드를 지원하는 스프링 @MVC가 가장 대표적으로 사용되는 스프링 서블릿 기반의 기술이다.
+- `스프링 MVC`(스프링 서블릿)는 스프링이 직접 제공하는 서블릿 기반의 MVC 프레임워크다. 애노테이션 설정과 유연한 핸들러 메소드를 지원하는 스프링 @MVC가 가장 대표적으로 사용되는 스프링 서블릿 기반의 기술이다.
 
-- 스프링 MVC는 유연한 아키텍쳐를 가지고 장기적으로 많은 인원이 큰 규모의 시스템을 개발할 때 적합한 프레임워크다.
+- 스프링 MVC는 유연한 아키텍쳐를 가지고 있으며, 장기적으로 많은 인원이 큰 규모의 시스템을 개발할 때 적합한 프레임워크다.
 
 - MVC 아키텍쳐는 보통 `프론트 컨트롤러 패턴`과 함께 사용되며, Spring MVC에서는 `DispatcherServlet`이 프론트 컨트롤러 역할을 수행한다.
 
@@ -36,8 +36,25 @@ public class HelloController{
 }
 ```
 
-- `DefaultAnnotationHandlerMappping`은 `/hello` URL로 들어온 요청에 대해서는 해당 컨트롤러의 hello() 메소드를 호출해야 한다고 파악한다.
-- `@Controller` 방식으로 구현된 컨트롤러는 DispatcherServlet이 `AnnotationMethodHandlerAdapter`라는 어댑터에게 `HttpServletRequest`를 넘겨준다. 어댑터는 그 정보를 가공하여 `hello`라는 메소드의 인자를 채워 호출한다.
+- `DefaultAnnotationHandlerMappping`은 `/hello` URL로 들어온 요청에 대해서는 해당 컨트롤러의 hello() 메소드를 호출해야 한다고 파악한다. 파악한 후에는 `HandlerMapping`에 맞는 `HandlerAdapter`를 사용하여 컨트롤러를 호출한다. 다음의 예시 코드를 보자.
+
+**예시 코드**
+
+```java
+public interface HandlerAdapter{
+	boolean supports(Object handler);
+
+	ModelAndView handle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception;
+
+	long getLastModified(HttpServletRequest request, Object handler);
+}
+```
+
+- `@Controller` 방식으로 구현된 컨트롤러는 DispatcherServlet이 `AnnotationMethodHandlerAdapter`라는 어댑터에게 `HttpServletRequest`를 넘겨준다.
+
+- `AnnotationMethodHandlerAdapter`는 supports 메소드에 `Controller`를 대입하여 지원할 수 있는지를 파악한 후에 `handle()` 메소드를 수행한다.
+
+- handle 메소드에서는 request를 Controller의 매핑 메소드가 필요로 하는 매개변수로 가공하여 호출한다.
 
 <br>
 
@@ -119,6 +136,17 @@ public interface View {
 
 ### Servlet과 SimpleServletHandlerAdapter
 
+```java
+public interface Servlet {
+   public void init(ServletConfig config) throws ServletException;
+   public void service(ServletRequest req, ServletResponse  res)
+                      throws ServletException, IOException;
+   public void destroy();
+   public ServletConfig getServletConfig();
+   public String getServletInfo();
+}
+```
+
 - 첫 번째 컨트롤러 타입은 표준 서블릿이다. 즉, javax.servlet.Servlet을 구현한 서블릿 클래스를 스프링 MVC의 컨트롤러로 사용할 수 있다. 단, 서블릿이 컨트롤러 빈으로 등록되는 경우, init(), destroy()와 같은 생명주기 메소드가 호출되지 않는다는 점을 주의하자.
 
 <br>
@@ -131,7 +159,7 @@ public interface HttpRequestHandler{
 }
 ```
 
-- 이 객체를 구현한 클래스를 컨트롤러로 사용한다. 서블릿처럼 동작하는 컨트롤러를 만들기 위해 사용한다. 전형적인 서블릿 스펙을 준수할 필요없이 HTTP 프로토콜을 기반으로 한 전용 서비스를 만들려고 할 때 사용할 수 있다.
+- 이 인터페이스를 구현한 클래스를 컨트롤러로 사용한다. **서블릿처럼 동작하는 컨트롤러를 만들기 위해 사용한다.** 전형적인 서블릿 스펙을 준수할 필요없이 HTTP 프로토콜을 기반으로 한 전용 서비스를 만들려고 할 때 사용할 수 있다.
 
 - 모델과 뷰 개념이 없는 HTTP 기반의 `RMI(Remote Method Invocation: 원격 메소드 호출)`과 같은 로우레벨 서비스를 개발할 때 사용할 수 있다.
 
@@ -155,7 +183,7 @@ public interface Controller{
 
 - 스프링 MVC에서 가장 인기 있는 컨트롤러 작성 방법이다.
 
-- `AnnotationMethodHandlerAdapter`는 지원하는 컨트롤러의 타입에 제한이 없다는 특징이 있다. 대신 클래스에 붙은 몇가지 애노테이션의 정보와 메소드 이름, 파라미터, 리턴 타입에 대한 규칙 등을 종하바여 컨트롤러를 선별하고 호출하는 방식을 결정한다.
+- `AnnotationMethodHandlerAdapter`는 지원하는 컨트롤러의 타입에 제한이 없다는 특징이 있다. 대신 클래스에 붙은 몇가지 애노테이션의 정보와 메소드 이름, 파라미터, 리턴 타입에 대한 규칙 등을 종합하여 컨트롤러를 선별하고 호출하는 방식을 결정한다.
 
 - `AnnotationMethodHandlerAdapter`의 또다른 특징은 URL 매핑을 컨트롤러 단위가 아니라 `메소드 단위`로 가능하게 했다. 그래서 Adapter의 이름에도 Method가 붙어있다.
 
@@ -218,7 +246,7 @@ public class HelloController implements Controller{ ... }
 
 ### SimpleUrlHandlerMapping
 
-- `BeanNameUrlHandlerMapping`은 매핑 정보를 관리하기 불편하다는 단점이 있는데, 이를 극복하기 위해 매핑 정보를 한 곳에 모아놓을 수 있도록 해주는 핸들러 매핑 전략이다.
+- `BeanNameUrlHandlerMapping`은 매핑 정보를 관리하기 불편하다는 단점이 있는데, 이를 극복하기 위해 매핑 정보를 한 곳에 모아놓을 수 있도록 해주는 핸들러 매핑 전략이다. 컨트롤러의 개수가 많은 프로젝트에서 선호될 수 있으나, 빈의 이름을 직접 타이핑해야 하기 때문에 타입 세이프하지 않다는 단점이 있다.
 
 <br>
 
@@ -242,6 +270,8 @@ public class HelloController implements Controller{ ... }
 - DispatcherServlet으로부터 매핑 작업을 요청받으면 그 결과로 `핸들러 실행 체인(HandlerExecutionChain)`을 돌려준다. 이 핸들러 실행 체인은 핸들러 인터셉터를 거쳐서 컨트롤러가 실행되도록 구성되어있다.
 
 - 핸들러 인터셉터는 그 적용 대상이 DispatcherServlet의 특정 핸들러 매핑으로 제한된다는 제약이 있지만, 스프링의 빈으로 등록할 수 있고, 컨트롤러 오브젝트에 접근이 가능하며, ModelAndView와 같은 컨트롤러가 리턴하는 정보를 활용할 수 있다는 장점이 있다.
+
+**사용방법은 추후에 작성**
 
 <br><hr>
 
@@ -377,7 +407,17 @@ public class HelloCon{
 
 ### ResponseStatusExceptionResolver
 
-- 예외를 특정 HTTP 응답 상태 코드로 전환해주는 디폴트 핸들러 예외 리졸버이다.
+- 예외 발생 시 단순한 500에러 대신, 특정 HTTP 응답 상태 코드로 전환해주는 디폴트 핸들러 예외 리졸버이다.
+
+- `ResponseStatusExceptionResolver`는 발생한 예외 클래스에 `@ResponseStatus`가 있는지 확인하고, 만약 있다면 애노테이션에 지정해둔 HTTP 응답 상태 코드와 reason을 넘겨줄 수 있다.
+
+**예시 코드**
+
+```java
+@ResponseStatus(value=HttpStatus.SERVICE_UNAVAILABLE, reason="서비스 일시 중지"
+public class NotInServiceException extends RuntimeException {
+}
+```
 
 <br>
 
