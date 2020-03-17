@@ -76,6 +76,13 @@
 - 뷰 오브젝트(`InternalResourceView` ...)
 - 뷰 리졸버(`InternalResourceViewResolver` ...)
 
+## [7.5장. @MVC](./08_@MVC/README.md)
+
+- @RequestMapping
+- @Controller
+- @ModelAttribute, BindingResult
+- Validation
+
 ## [8장. 스프링부트 MVC](./08_SpringBootMVC/README.md)
 
 ### 백기선님의 스프링 부트 개념과 활용 강좌 참고
