@@ -446,7 +446,7 @@ Redis는 NoSQL로 `캐시`, `메세지 브로커`, `키/밸류 스토어` 등으
 ### docker container 생성
 
 ```docker
-docker run -p 6379:6379 --name redis_boot
+docker run -p 6379:6379 --name redis_boot -d redis
 
 docker exec -i -t redis_boot redis-cli
 
