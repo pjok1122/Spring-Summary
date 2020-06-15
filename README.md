@@ -127,3 +127,13 @@
 - JUnit 동작 과정
 - 테스트 컨텍스트 프레임워크
 - 슬라이스 테스트 (`@WebMvcTest`, `@DataJpaTest`)
+
+
+## [Cache]
+
+### 공식문서 간단 정리
+
+- 캐시 추상화
+- 다양한 Annotation
+- 사용 예제
+
