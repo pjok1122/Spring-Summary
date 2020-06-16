@@ -1,8 +1,8 @@
-## Feature
+# Feature
 
 - `Authentication` : 자원에 접근하고자 하는 사람의 신원을 확인하는 방법 (ID / PW)
 
-### Password Stroage History
+## Password Stroage History
 
 - 패스워드 저장의 권장사항은 **암호학적 해시함수**와 **Salt**를 사용하는 것입니다.
 
@@ -16,9 +16,9 @@
 
 - 서비스에서는 가급적 `session`, `OAuth Token`, `Json Web Token` 등을 사용하여 성능을 개선하여야 합니다.
 
-### PasswordEncoder
+## PasswordEncoder
 
-#### DelegatingPasswordEncoder
+### DelegatingPasswordEncoder
 
 - `xxxPasswordEncoder`에게 인코딩을 `위임`하는 PasswordEncoder 입니다.
 - Spring Security의 default PasswordEncoder 입니다.
@@ -41,14 +41,14 @@ PasswordEncoder passwordEncoder =
 ```
 [DelegatingPasswordEncoder 결과]
 
-{bcrypt}$2a$10$dXJ3SW6G7P50lGmMkkmwe.20cQQubK3.HZWzG3YB1tlRy.fqvM/BG 
-{noop}password 
-{pbkdf2}5d923b44a6d129f3ddf3e3c8d29412723dcbde72445e8ef6bf3b508fbf17fa4ed4d6b99ca763d8dc 
-{scrypt}$e0801$8bWJaSu2IKSn9Z9kM+TPXfOc/9bdYSrN1oD9qfVThWEwdRTnO7re7Ei+fUZRJ68k9lTyuTeUp4of4g24hHnazw==$OAOec05+bXxvuu/1qZ6NUR+xQYvYv7BeL1QxwRpY5Pc=  
+{bcrypt}$2a$10$dXJ3SW6G7P50lGmMkkmwe.20cQQubK3.HZWzG3YB1tlRy.fqvM/BG
+{noop}password
+{pbkdf2}5d923b44a6d129f3ddf3e3c8d29412723dcbde72445e8ef6bf3b508fbf17fa4ed4d6b99ca763d8dc
+{scrypt}$e0801$8bWJaSu2IKSn9Z9kM+TPXfOc/9bdYSrN1oD9qfVThWEwdRTnO7re7Ei+fUZRJ68k9lTyuTeUp4of4g24hHnazw==$OAOec05+bXxvuu/1qZ6NUR+xQYvYv7BeL1QxwRpY5Pc=
 {sha256}97cde38028ad898ebc02e690819fa220e88c62e0699403e94fff291cfffaf8410849f27605abcbc0
 ```
 
-#### BCrpytPasswordEncoder
+### BCrpytPasswordEncoder
 
 - 강도를 조절할 수 있고, 강도가 높을수록 해시화 시간이 오래 걸립니다.
 - 인증을 수행하는 데에 의도적으로 1초 정도 소요되도록 설정하는 것이 좋습니다.
@@ -62,29 +62,28 @@ String result = encoder.encode("myPassword");
 assertTrue(encoder.matches("myPassword", result));
 ```
 
-#### Argon2PasswordEncoder
+### Argon2PasswordEncoder
 
 - 크래킹 방지를 위해 메모리를 많이 사용한다는 점이 특징입니다.
 - 인증을 수행하는 데에 의도적으로 1초 정도 소요되도록 설계되었습니다.
 
-#### Pbkdf2PasswordEncoder
+### Pbkdf2PasswordEncoder
 
 - `FIPS(Federal Information Processing Standard)`에 가장 적합한 해시 함수입니다.
 - 인증을 수행하는 데에 의도적으로 1초 정도 소요되도록 설계되었습니다.
 
-#### SCryptPasswordEncoder
+### SCryptPasswordEncoder
 
 - 크래킹 방지를 위해 메모리를 많이 사용한다는 점이 특징입니다.
 - 인증을 수행하는 데에 의도적으로 1초 정도 소요되도록 설계되었습니다.
 
+## Protecting Against Exploits
 
-### Protecting Against Exploits
-
-#### CSRF Attack
+### CSRF Attack
 
 - Spring은 `Synchronizer Token Pattern`과 `SameSite Attribute`를 이용하여 CSRF 공격을 방어할 수 있습니다.
 
-##### Synchronizer Token Pattern
+#### Synchronizer Token Pattern
 
 - 흔히 CSRF Token이라고 불리는 토큰을 이용한 해결책입니다.
 
@@ -95,23 +94,20 @@ assertTrue(encoder.matches("myPassword", result));
 **예시**
 
 ```html
-<form method="post"
-    action="/transfer">
-<input type="hidden"
+<form method="post" action="/transfer">
+  <input
+    type="hidden"
     name="_csrf"
-    value="4bfd1575-3ad1-4d21-96c7-4ef2d9f86721"/>
-<input type="text"
-    name="amount"/>
-<input type="text"
-    name="routingNumber"/>
-<input type="hidden"
-    name="account"/>
-<input type="submit"
-    value="Transfer"/>
+    value="4bfd1575-3ad1-4d21-96c7-4ef2d9f86721"
+  />
+  <input type="text" name="amount" />
+  <input type="text" name="routingNumber" />
+  <input type="hidden" name="account" />
+  <input type="submit" value="Transfer" />
 </form>
 ```
 
-##### SameSite Attribute
+#### SameSite Attribute
 
 - `Spring Security`에서 사용하는 방법이 아닌, `Spring Session`에서 제공하는 방법입니다.
 
@@ -119,6 +115,4 @@ assertTrue(encoder.matches("myPassword", result));
 
 - 쿠키에 `SameSite`라는 속성을 추가하면, 동일한 사이트에서 HTTP 요청을 할 때에만 해당 쿠키를 포함시켜 요청을 전송합니다.
 
-
->이 외에도 다양한 공격을 방어할 수 있지만, Spring Security의 핵심에서 벗어나므로 생략합니다.
-
+> 이 외에도 다양한 공격을 방어할 수 있지만, Spring Security의 핵심에서 벗어나므로 생략합니다.
