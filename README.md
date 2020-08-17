@@ -129,7 +129,7 @@
 - 슬라이스 테스트 (`@WebMvcTest`, `@DataJpaTest`)
 
 
-## [Cache]
+## [Cache](./13_Cache/README.md)
 
 ### 공식문서 간단 정리
 
