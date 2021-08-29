@@ -1,8 +1,8 @@
 # FeignClient
 
 - Netflix에서 개발된 Http Client 기술로 손쉽게 외부 API를 호출할 수 있다는 장점이 있다.
-- Interface에 외부 API의 스펙을 정의하고 적절한 annotation만 사용하면 구현체를 만들어준다.
-- RestTemplate을 사용했을 때와 Feign Client를 사용했을 때의 차이점
+- 외부 API의 스펙을 Interface에 정의하고 적절한 annotation만 사용하면 구현체를 만들어준다.
+- RestTemplate을 사용했을 때보다 훨씬 생산성 높은 코드를 작성할 수 있다.
 
 ```java
 // RestTemplate
@@ -60,7 +60,8 @@ public interface MerchantCenterClient {
 
 ## 의존성 주입
 
-- Spring boot 버전에 맞는 cloud 버전을 선택해야 한다. 
+- Spring boot 버전에 맞는 cloud 버전을 선택해야 한다.
+- https://spring.io/projects/spring-cloud
   
 ```
 gradle
@@ -92,12 +93,12 @@ pom.xml
 
 ## Feign 사용 설정하기
 
-- `@EnableFeignClients` Annotation을 Bean이 주입되는 곳에 설정.
+- `@EnableFeignClients`
 - main에 설정할 경우, main이 포함된 패키지 밑에 있는 모든 `@FeignClient`를 찾아서 관리.
 - main이 아닌 경우, 명시적으로 basePackages를 선언하여 사용한다.
 
-```
-예시1)
+```java
+//예시1)
 @SpringBootApplication
 @EnableFeignClients
 public class DemoApplication {
@@ -108,7 +109,7 @@ public class DemoApplication {
 
 }
 
-예시2)
+//예시2)
 @Configuration
 @EnableFeignClients(basePackages = "com.youngjae.feign.client.demo.feign")
 public class FeignConfig {
@@ -121,7 +122,7 @@ public class FeignConfig {
 
 - `EnableFeignClients` 의 basePackages 밑에 @FeignClient 애노테이션이 붙은 인터페이스를 생성.
 
-```
+```java
 @FeignClient(name ="localhost-api", url = "${feign.localhost.url}")
 public interface FeignLocalClient {
     
@@ -339,6 +340,8 @@ public class LocalFeignService {
   - `@Headers` : Feign Contract
   - `@RequestHeader` : SpringMvc Contract
 - `Feign`, `Spring-web` 둘 중 하나에서 제공하는 Annotation만 사용할 것!
+
+위의 모든 코드는 [예시코드](https://github.com/pjok1122/feign-client-example)에 정리되어있습니다.
 
 
 ## FeignClient 설정
