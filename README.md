@@ -128,18 +128,27 @@
 - 테스트 컨텍스트 프레임워크
 - 슬라이스 테스트 (`@WebMvcTest`, `@DataJpaTest`)
 
+<hr>
 
-## [Cache](./13_Cache/README.md)
+# 번외
 
-### 공식문서 간단 정리
+## [13. Cache](./13_Cache/README.md)
+
+### 공식문서 정리
 
 - 캐시 추상화
 - 다양한 Annotation
 - 사용 예제
 
-
-
-### [FeignClient](./91_FeignClient/README.md)
+## [91. FeignClient](./91_FeignClient/README.md)
 
 - FeignClient Guide
 - FeignClient Configuration
+
+
+## [92. KafkaCluster](./92_Kafka/01_KafkaArchitecture/README.md)
+
+- Kafka Basic Architecture
+- Kafka CLI
+- Kafka Producer
+- Kafka Consumer
