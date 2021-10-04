@@ -19,7 +19,7 @@ Kafka Cluster는 메시지를 저장하는 메시지 큐 역할을 수행합니�
 
 Broker는 메시지(이벤트) 별로 구분하기 위해 `Topic` 별로 메시지를 나누어 저장하도록 되어있습니다. Producer는 메시지를 전달할 때 어떤 topic에 메시지를 저장할 지에 대해서 명시해서 저장해야 합니다. 같은 이유로 Consumer 또한 어떤 topic에서 데이터를 읽을 지 명시해서 읽게 됩니다.
 
-그림에선 Producer1, Producer2는 TopicA에 데이터를 저장하고 있고, Consumer Group1은 TopicA에 대한 데이터를 읽고 있습니다. 이 부분에 대해서 좀 더 자세히 살펴봅시다. Producer1, Producer2는 TopicA에 메시지를 보낸다고 명시만 할 뿐, 데이터를 `어디에` 저장할 것인가에 대해서는 Kafka Clsuter에서 결정하게 됩니다. Producer로부터 메시지를 전달 받았을 때, 메시지에 대한 적절한 규칙이나 key에 대한 hash함수를 적용해서 partition1에 저장할 지, partition2에 저장할 지에 대한 결정을 내리게 됩니다.
+그림에선 Producer1, Producer2는 TopicA에 데이터를 저장하고 있고, Consumer Group1은 TopicA에 대한 데이터를 읽고 있습니다. 이 부분에 대해서 좀 더 자세히 살펴봅시다. Producer1, Producer2는 TopicA에 메시지를 보낸다고 명시만 할 뿐, 어떤 브로커(파티션)에 메시지를 저장할 지는 적절한 규칙이나 hash함수를 적용해서 내부적으로 결정하게 됩니다.
 
 파티션이란, **메시지를 저장하는 논리적 파일**입니다. Kafka Cluster는 TopicA에 대한 메시지를 몇 개의 파티션으로 나누어 저장할 것인지를 사전에 정의합니다.
 
