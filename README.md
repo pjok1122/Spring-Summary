@@ -1,7 +1,5 @@
 ## [1장. IoC Container & Bean](./01_IoC-Container/README.md)
 
-### 토비의 스프링 3.1 Vol.1 Chapter1. IoC 컨테이너와 빈 요약 정리.
-
 - IoC 컨테이너와 Bean
 - 설정 메타정보
 - IoC 컨테이너 종류
@@ -14,16 +12,12 @@
 
 ## [2장. ApplicationCotext의 다른 기능들](./02_ApplicationContextDetail/README.md)
 
-### 백기선님의 스프링 프레임워크 핵심기술 강좌 참고
-
 - Environment (프로퍼티 등록)
 - MessageSource (다국화 기능)
 - ResourceLoader (리소스 추상화)
 - ApplicationEventPublisher (이벤트 프로그래밍)
 
 ## [3장. Validation &amp; DataBinding 추상화](./03_ValidationDataBinding/README.md)
-
-### 백기선님의 스프링 프레임워크 핵심기술 강좌 참고
 
 - Validator (객체 유효성 검사)
 - DataBinding
@@ -33,8 +27,6 @@
   - ConversionService
 
 ## [4장. Aspect Oriented Programming](./04_AOP/README.md)
-
-### 백기선님의 스프링 프레임워크 핵심기술 강좌 참고
 
 - AOP의 주요 개념
 - AOP의 적용 방법
@@ -47,8 +39,6 @@
 
 ## [5장. 스프링부트의 원리](./05_SpringBootPrinciple/README.md)
 
-### 백기선님의 스프링 부트 개념과 활용 강좌 참고
-
 - 의존성 관리
 - @EnableAutoConfiguration
 - 내장 웹 서버 설정
@@ -57,8 +47,6 @@
 - 독립적으로 실행 가능한 JAR 파일
 
 ## [6장. 스프링부트의 핵심 기능](./06_SpringBootCoreFeature/README.md)
-
-### 백기선님의 스프링 부트 개념과 활용 강좌 참고
 
 - SpringApplication (배너, 외부인자)
 - 외부설정 (property, 우선순위, 컨버젼, 유효성 검사)
@@ -85,8 +73,6 @@
 
 ## [8장. 스프링부트 MVC](./08_SpringBootMVC/README.md)
 
-### 백기선님의 스프링 부트 개념과 활용 강좌 참고
-
 - HttpMessageConverter (`ContentNegotiatingViewResolver`)
 - 정적 리소스 지원 (`index.html`, `favicon.ico`)
 - 웹 JAR (`jquery`, `vue.js`)
@@ -98,16 +84,12 @@
 
 ## [9장. 스프링 데이터 액세스 기술](./09_SpringDataAccess/README.md)
 
-### 토비의 스프링 3.1 Vol.2 Chapter 2. 데이터 액세스 기술 정리
-
 - DataSource
 - Spring JDBC
 - JdbcTemplate API
 - JPA는 다른 레포에서 정리.
 
 ## [10장. 스프링부트 데이터 액세스 기술](./10_SpringBootDataAccess/README.md)
-
-### 백기선님의 스프링 부트 개념과 활용 강좌 참고
 
 - 인메모리 데이터 베이스 (H2)
 - DBCP
