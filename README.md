@@ -128,6 +128,10 @@
 - 테스트 컨텍스트 프레임워크
 - 슬라이스 테스트 (`@WebMvcTest`, `@DataJpaTest`)
 
+## [12장. 스프링 부트 관련 설정](./12_SpringBootConfiguration)
+
+- DBCP 설정 가이드
+
 <hr>
 
 # 번외
