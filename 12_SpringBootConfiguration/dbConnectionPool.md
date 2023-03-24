@@ -50,9 +50,99 @@ maxActive: 10
 
 이와 별개로 mySQL에는 autoReconnect라는 JDBC Driver 설정이 있다. 이 설정을 주면 커넥션 유효성 검사 없이도 커넥션에 문제가 있는 경우, 재연결을 시도할 수 있다. 언뜻보기에는 좋아보이지만, 치명적인 문제가 있다. 커넥션에 문제가 있는 경우 SQLException을 발생시키고 재접속 처리를 수행하는데, SQLException은 RuntimeException이 아니므로 `@Transactional` 애노테이션을 붙였더라도 롤백처리가 제대로 되지 않는다. 따라서 권장되지 않는 방법이다.
 
+### Common DBCP2 설정 코드
+
+```xml
+<dependency>
+    <groupId>org.apache.commons</groupId>
+    <artifactId>commons-dbcp2</artifactId>
+    <version>2.2.0</version>
+</dependency>
+```
+
+```yml
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    poolName: test
+    validationQuery: SELECT 1
+    testOnBorrow: false
+    testWhileIdle: true
+    initialSize: 20
+    minIdle: 20
+    maxIdle: 20
+    maxActive: 20
+    maxWait: 2000
+    timeBetweenEvictionRunsMillis: 80000
+```
+
+```java
+public class DatabaseConfig {
+  @Bean
+  @ConfigurationProperties(prefix = "spring.datasource")
+  public DataSource dataSource() {
+    return DataSourceBuilder.create()
+                            .url(url)
+                            .username(username)
+                            .password(password)
+                            .build();
+  }
+}
+```
+
+<hr><br>
+
 ## HikariCP Properties
 
+https://github.com/brettwooldridge/HikariCP#frequently-used
 
+- minimumIdle: 커넥션 풀에 존재할 수 있는 최소 커넥션 수를 의미한다. (default: maximumPoolSize와 동일)
+- maximumPoolSize: 커넥션 풀에 존재하는 커넥션 수 + 커넥션 풀에 존재하지 않는 커넥션 수를 의미하므로 최대로 가질 수 있는 커넥션 수를 의미한다.
+- connectionTimeout : 커넥션을 얻을 때까지 대기하는 시간을 의미한다.
+- idleTimeout: 커넥션 풀에서 커넥션이 사용되지 않은 상태로 얼마나 오랫동안 머무를 수 있는지를 의미한다. 오래된 커넥션은 `minimumIdle` 개수까지만 줄어들 수 있다. 이 동작은 `minimumIdle`의 개수가 `maximumPoolSize`보다 작은 경우에만 동작한다.
+- maxLifeTime: 커넥션 풀에 있는 커넥션의 생명주기를 의미한다. 해당 시간이 지나면 커넥션 풀에서 커넥션은 사라지게 된다. 단, 사용 중인 커넥션은 사용이 끝날 때까지 폐기되지 않는다.
+- keepAliveTime: 커넥션 풀의 상태를 어떤 주기로 체크할 지를 의미한다. 이때 커넥션이 유효한지 확인하기 위해서 JDBC의 `ping`이나 `connectionTestQuery`가 수행된다. (default: 0 비활성화)
 
-## 코드로 설정하는 방법
+### 커넥션 풀 사이즈
+
+Common DBCP와 마찬가지로 minimumIdle 수치와 maximumPoolSize를 같게 설정하는 것이 좋다. 그 이유는 minimumIdle만큼의 커넥션이 이미 사용 중이라면, 계속 새로운 커넥션이 만들어지고 사라지는 과정이 필요하기 때문이다. 만약  사용 중인 커넥션의 개수가 maximumPoolSize에 도달한 경우, 다음 요청은 커넥션을 얻기 위해 connectionTimeout의 시간만큼 대기하게 된다. 만약 connectionTimeout을 30초로 사용하고 있다면 해당 요청은 최대 30초까지 대기하게 된다.
+
+### 유효성 검사
+
+HikariCP의 커넥션 관리 방법과 유사하다. `maxLifeTime`이라는 값을 지정하여 너무 오랫동안 살아있는 커넥션은 의도적으로 끊어준다. 일반적으로 연결 시간에 제한이 있는 데이터베이스와 통신할 때 커넥션이 갑자기 끊어지는 것을 막기 위해 사용된다. DB에서 하나의 커넥션을 사용할 수 있는 시간이 30분이라면 `maxLifeTime`은 해당 수치보다 무조건 작게 설정해야 한다. `maxLifeTime`이 작을수록 커넥션을 자주 없애고 새로 만들지만, 이때 부하가 한 번에 몰리는 것을 방지하기 위해 커넥션마다 생명주기에 약간의 오차를 주는 방식을 사용한다.
+
+이상적인 상황에서는 위의 설정만으로도 충분하다. 하지만 의도치않은 DB의 재시작이나 네트워크 오류로 인해서 커넥션이 지정된 시간보다 빨리 망가져버린 경우에는 특정 쓰레드가 유효하지 않은 커넥션을 얻게될 수 있고, 새로운 커넥션을 받는만큼의 오버헤드가 발생할 수 있다. 만약 이런 상황 조차도 용납하기 어려운 서비스라면, `keepAliveTime` 설정도 고려해볼만하다.
+
+`keepAliveTime`은 특정 주기마다 해당 커넥션이 유효한 지를 확인해서 connection pool에 유효하지 않은 커넥션이 존재할 확률이 대폭 낮춰준다. 하지만 DBCP에서 살펴봤던 것처럼 너무 잦은 `keepAliveTime`은 DB에 많은 testQuery를 발생시켜 DB 부하를 높일 수도 있다. 따라서 본인의 상황을 고려해서 설정하는 것이 좋다.
+
+### HikariCP 설정 코드
+
+application.yml 설정 파일에 다음과 같이 설정한다.
+
+```yml
+spring:
+  datasource:
+    hikari:
+      jdbc-url: ${POSTGRE_URL}
+      username: ${POSTGRE_USER}
+      password: ${POSTGRE_PASSWORD}
+      maximum-pool-size: 50
+      connection-timeout: 5000
+      max-lifetime: 50000
+```
+
+그 외 설정할 수 있는 프로퍼티 및 default 값을 보려면 `com.zaxxer.hikari.HikariConfig`를 살펴보면 된다.
+
+```java
+public class DatabaseConfig {
+  @Bean
+  @ConfigurationProperties(prefix = "spring.datasource.hikari")
+  public DataSource budsDataSource() {
+    return DataSourceBuilder.create()
+                            .build();
+  }
+}
+```
+
+이렇게 설정하면 `spring.datasource.hikari` 밑에 있는 프로퍼티들이 `HikaraDataSource`를 만들 때 바인딩된다.
 
