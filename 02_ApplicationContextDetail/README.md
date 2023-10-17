@@ -95,7 +95,7 @@ Resource 타입은 location 문자열과 ApplicationContext의 타입에 따라 
 
 - `ClassPathXmlApplicationContext("location")` -> `ClassPathResource`
 - `FileSystemXmlApplicationContext("location")` -> `FileSystemResource`
-- `WebApplicationContext("location")` -> `ServeltContextResource`
+- `WebApplicationContext("location")` -> `ServletContextResource`
 
 ApplicationContext의 타입에 상관없이 **리소스 타입을 강제하려면 java.net.URL 접두어(+ classpath:) 중 하나를 선택하여 사용할 수 있다. (추천방법)**
 
